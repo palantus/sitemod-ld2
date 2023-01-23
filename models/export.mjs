@@ -29,6 +29,12 @@ export default class Export extends Entity {
     return query.type(Export).tag(UNIQUE_TYPE_NAME).all.filter(l => new ACL(l, type).hasAccess(user, 'r'))
   }
 
+  patch(obj, user){
+    if(typeof obj.title === "string" && obj.title) this.title = obj.title;
+    if(typeof obj.spec === "string") this.spec = obj.spec;
+    if(typeof obj.common === "boolean" && user.hasPermission("ld2.export.admin")) e.common = obj.common;
+  }
+
   hasAccess(user, accessType = 'r', shareKey = null) {
     return new ACL(this, DataType.lookup(UNIQUE_TYPE_NAME)).hasAccess(user, accessType, shareKey)
   }
@@ -47,21 +53,22 @@ export default class Export extends Entity {
   }
 
   toObj(user, shareKey) {
+    let owner = this.owner
     return {
       id: this._id,
       title: this.title,
-      owner: this.owner?.toObjSimple()||null,
-      access: this.access(user, shareKey)
+      this: this.spec,
+      owner: owner?.toObjSimple()||null,
+      access: this.access(user, shareKey),
+      common: this.common,
+      category: this.common ? "common" : owner.id == user.id ? "mine" : "shared"
     }
   }
 
   toObjSpec(user, shareKey) {
     return {
-      id: this._id,
-      title: this.title,
-      this: this.spec,
-      owner: this.owner?.toObjSimple()||null,
-      access: this.access(user, shareKey)
+      ...this.toObj(user, shareKey),
+      spec: this.spec
     }
   }
 }
