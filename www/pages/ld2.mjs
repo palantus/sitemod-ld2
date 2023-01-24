@@ -4,6 +4,7 @@ import LD2Reader from "/libs/ld2reader.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/tablebrowser.mjs"
+import "/components/export-csv.mjs"
 import api from "/system/api.mjs"
 import {state, pushStateQuery, setPageTitle} from "/system/core.mjs"
 import {on, off} from "/system/events.mjs"
@@ -29,7 +30,12 @@ template.innerHTML = `
     }
     #hash{width: 250px;}
     
+    #header span{color: var(--accent-color-light);}
+    #export-csv-btn{margin-bottom: 5px;}
+
     /* Overview */
+
+    #file-content{display: inline;} /* For scroll to work */
     
     #fileoverviewtab {
         border-collapse: collapse;
@@ -60,11 +66,7 @@ template.innerHTML = `
       margin-bottom: 5px;
     }
     
-    #downloadFile{
-      display:none;
-    }
-  
-    .hidden{display: none;}
+    .hidden{display: none !important;}
 
     #flex{
       display: flex;
@@ -79,30 +81,33 @@ template.innerHTML = `
     <h1>Inspect LD2 file</h1>
     <div id="controls">
       <input type="file" id="fileinput" />
-      <button id="downloadFile">Download</button>
     </div>
-    <div id="header">
-    </div>
-    <div id="flex">
-      <div id="left">
-        <table id="fileoverviewtab">
-          <thead>
-            <tr>
-            <th>Table</th>
-            <th>Records</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-        <br><br><br><br><br><br><br><br>
-      </div>
-      <div id="right" class="hidden">
-        <div id="rightheader">
-          <h2></h2>
-          <button id="export-table-csv-btn" class="styled">Export to CSV</button>
+    <export-csv-component id="export-component" class="hidden"></export-csv-component>
+    <div id="file-content" class="hidden">
+      <div id="header"></div>
+      <button id="export-csv-btn" class="styled">Generate CSV</button>
+      <button id="downloadFile" class="styled hidden">Download</button>
+      <div id="flex">
+        <div id="left">
+          <table id="fileoverviewtab">
+            <thead>
+              <tr>
+              <th>Table</th>
+              <th>Records</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+          <br><br><br><br><br><br><br><br>
         </div>
-        <tablebrowser-component></tablebrowser-component>
+        <div id="right" class="hidden">
+          <div id="rightheader">
+            <h2></h2>
+            <button id="export-table-csv-btn" class="styled">Export to CSV</button>
+          </div>
+          <tablebrowser-component></tablebrowser-component>
+        </div>
       </div>
     </div>
   </div>
@@ -116,6 +121,7 @@ class Element extends HTMLElement {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.readSingleFile = this.readSingleFile.bind(this)
+    this.exportCSV = this.exportCSV.bind(this)
     this.tableClicked = this.tableClicked.bind(this)
     this.exportTableCSV = this.exportTableCSV.bind(this)
 
@@ -123,8 +129,13 @@ class Element extends HTMLElement {
     this.curTable = null;
 
     this.shadowRoot.getElementById('fileinput').addEventListener('change', this.readSingleFile, false);
+    this.shadowRoot.getElementById("export-csv-btn").addEventListener("click", this.exportCSV)
     this.shadowRoot.querySelector("#fileoverviewtab tbody").addEventListener("click", this.tableClicked)
     this.shadowRoot.getElementById("export-table-csv-btn").addEventListener("click", this.exportTableCSV)
+    this.shadowRoot.getElementById("export-component").addEventListener("back-clicked", () => {
+      this.shadowRoot.getElementById("export-component").classList.toggle("hidden", true)
+      this.shadowRoot.getElementById("file-content").classList.toggle("hidden", false)
+    })
   }
 
   async attemptLoadParmFile(){
@@ -136,7 +147,7 @@ class Element extends HTMLElement {
 
   async loadFileFromHash(fileHash){
     if(!fileHash) return;
-    this.shadowRoot.getElementById('downloadFile').style.display = "block"
+    this.shadowRoot.getElementById('downloadFile').classList.toggle("hidden", false)
     if(!this.hasAttribute("hidecontrols")){
       pushStateQuery({hash: fileHash})
     }
@@ -196,11 +207,7 @@ class Element extends HTMLElement {
   
     this.shadowRoot.querySelector("#fileoverviewtab tbody").innerHTML = '';
   
-    this.shadowRoot.getElementById("header").innerText = `File format: ${this.reader.header.formatversion || "N/A"},
-                       AX version: ${this.reader.header.axversion || "N/A"},
-                       Exported at: ${/*moment.utc("1900-01-01").add(reader.header.date, "days").add(reader.header.time, "seconds").local().format("D. MMM YYYY HH:mm:ss")*/
-                                      this.reader.header.date ? moment(this.reader.header.date + " " + this.reader.header.time).format("D. MMM YYYY HH:mm:ss") : "N/A"
-                        }`
+    this.shadowRoot.getElementById("header").innerHTML = `File format: <span>${this.reader.header.formatversion || "N/A"}</span>, AX version: <span>${this.reader.header.axversion || "N/A"}</span>, Exported at: <span>${this.reader.header.date ? moment(this.reader.header.date + " " + this.reader.header.time).format("D. MMM YYYY HH:mm:ss") : "N/A"}</span>`
   
     let tables = this.reader.getTableNamesAsArray();
     for(let tableName of tables){
@@ -209,6 +216,8 @@ class Element extends HTMLElement {
       //row.click(function(){tableClicked($(this).find(".tabname").text())})
       this.shadowRoot.querySelector("#fileoverviewtab tbody").innerHTML += row;
     }
+
+    this.shadowRoot.getElementById("file-content").classList.toggle("hidden", false)
   }
 
   async tableClicked(e){
@@ -247,6 +256,13 @@ class Element extends HTMLElement {
     })
 
     saveFileCSV([header, ...data], `${this.curTabName}.csv`)
+  }
+
+  async exportCSV(){
+    this.shadowRoot.getElementById("file-content").classList.toggle("hidden", true)
+    let component = this.shadowRoot.getElementById("export-component")
+    await component.init(this.reader)
+    component.classList.toggle("hidden", false)
   }
 
   connectedCallback() {
