@@ -8,6 +8,7 @@ import api from "/system/api.mjs"
 import {state, pushStateQuery, setPageTitle} from "/system/core.mjs"
 import {on, off} from "/system/events.mjs"
 import { alertDialog } from "/components/dialog.mjs"
+import {saveFileCSV} from "/libs/file.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -71,6 +72,7 @@ template.innerHTML = `
     }
     #left{overflow-y: auto; width: 400px;}
     #right{overflow: auto; padding-left: 10px; max-width: calc(100% - 400px);}
+    #rightheader{margin-bottom: 10px;}
   </style>
 
   <div id="container">
@@ -95,7 +97,12 @@ template.innerHTML = `
         </table>
         <br><br><br><br><br><br><br><br>
       </div>
-      <div id="right">
+      <div id="right" class="hidden">
+        <div id="rightheader">
+          <h2></h2>
+          <button id="export-table-csv-btn" class="styled">Export to CSV</button>
+        </div>
+        <tablebrowser-component></tablebrowser-component>
       </div>
     </div>
   </div>
@@ -110,12 +117,14 @@ class Element extends HTMLElement {
 
     this.readSingleFile = this.readSingleFile.bind(this)
     this.tableClicked = this.tableClicked.bind(this)
+    this.exportTableCSV = this.exportTableCSV.bind(this)
 
     this.reader = null;
     this.curTable = null;
 
     this.shadowRoot.getElementById('fileinput').addEventListener('change', this.readSingleFile, false);
     this.shadowRoot.querySelector("#fileoverviewtab tbody").addEventListener("click", this.tableClicked)
+    this.shadowRoot.getElementById("export-table-csv-btn").addEventListener("click", this.exportTableCSV)
   }
 
   async attemptLoadParmFile(){
@@ -173,7 +182,6 @@ class Element extends HTMLElement {
   }
 
   async onFile(e, filename, ext){
-    this.shadowRoot.getElementById("right").innerHTML = ""
     let buffer = e.target.result;
     switch(ext.toLowerCase()){
       case ".ld2":
@@ -206,30 +214,40 @@ class Element extends HTMLElement {
   async tableClicked(e){
     let tabName = e.target.closest("tr")?.querySelector(".tabname")?.innerText
     if(!tabName) return;
-    let browser = this.shadowRoot.getElementById("right").querySelector("tablebrowser-component")
-    if(!browser){
-      this.shadowRoot.getElementById("right").innerHTML = `
-        <div id="header">
-          <h2>${tabName}</h2>
-        </div>
-        <tablebrowser-component></tablebrowser-component>`
-      browser = this.shadowRoot.getElementById("right").querySelector("tablebrowser-component")
-      browser.setReader(this.reader)
-    }
+    this.curTabName = tabName;
+    let right = this.shadowRoot.getElementById("right")
+    right.classList.toggle("hidden", false)
+    right.querySelector("#rightheader h2").innerText = tabName;
+    let browser = right.querySelector("tablebrowser-component")
+    browser.setReader(this.reader)
     browser.browse(tabName)
   }
-  /*
-  async tableClicked(e){
-    let tabName = e.target.closest("tr")?.querySelector(".tabname")?.innerText
-    if(!tabName) return;
-    this.shadowRoot.getElementById("fileoverviewtab").style.display = "none";
-    this.shadowRoot.getElementById("tabcontent").style.display = "table";
-    this.shadowRoot.getElementById("curtabname").innerText = tabName
-    this.curTable = tabName;
-    this.curOffset = 0;
-    this.showRecords()
+
+  async exportTableCSV(){
+    let data = await this.reader.getAllRecords(this.curTabName);
+    await this.reader.fillTableMetadata(this.curTabName)
+    let meta = this.reader.tables[this.curTabName];
+
+    let header = []
+    for(let f of meta.fields){
+      header.push(f.name)
+    }
+    header = header.join(";")
+
+    data = data.map(r => {
+      let row = []
+      for(let f of meta.fields){
+        let displayValue = moment.isMoment(r[f.name]) ? r[f.name].format(`D. MMM YYYY ${r[f.name].format('HH:mm:ss') == "00:00:00" ? "" : "HH:mm:ss"}`)
+                        : (r[f.name] !== undefined && r[f.name] !== null)
+                        ? (Array.isArray(r[f.name]) ? JSON.stringify(r[f.name]) : r[f.name])
+                        : "";
+        row.push(displayValue)
+      }
+      return row.join(";")
+    })
+
+    saveFileCSV([header, ...data], `${this.curTabName}.csv`)
   }
-  */
 
   connectedCallback() {
     on("changed-page-query", elementName, (query) => this.loadFileFromHash(query.hash))
