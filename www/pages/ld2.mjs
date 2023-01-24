@@ -3,6 +3,7 @@ import moment from "/libs/moment.js"
 import LD2Reader from "/libs/ld2reader.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
+import "/components/tablebrowser.mjs"
 import api from "/system/api.mjs"
 import {state, pushStateQuery, setPageTitle} from "/system/core.mjs"
 import {on, off} from "/system/events.mjs"
@@ -13,8 +14,10 @@ template.innerHTML = `
   <link rel='stylesheet' href='/css/global.css'>
   <style>
     #container{
-        padding: 5px;
+        padding: 10px;
         position: relative;
+        overflow: hidden;
+        height: calc(100% - 20px);
     }
     h1{
       margin-bottom: 5px;
@@ -29,7 +32,7 @@ template.innerHTML = `
     
     #fileoverviewtab {
         border-collapse: collapse;
-        width: 300px;
+        width: 100%;
         border-top: 1px solid gray;
     }
     
@@ -56,75 +59,44 @@ template.innerHTML = `
       margin-bottom: 5px;
     }
     
-    /* Content */
-    
-    #tabcontent{
-      display: none;
-    }
-    
-    #curtabrecords, #curtabrecords td, #curtabrecords th {
-        border: 1px solid #ddd;
-        text-align: left;
-    }
-    
-    #curtabrecords {
-        border-collapse: collapse;
-        width: 100%;
-        margin-top: 10px;
-        white-space: nowrap;
-        font-size: 90%;
-    }
-    
-    #curtabrecords th, #curtabrecords td {
-        padding-left: 1px;
-        padding-right: 1px;
-    }
-    
     #downloadFile{
       display:none;
     }
   
     .hidden{display: none;}
+
+    #flex{
+      display: flex;
+      height: 100%;
+    }
+    #left{overflow-y: auto; width: 400px;}
+    #right{overflow: auto; padding-left: 10px; max-width: calc(100% - 400px);}
   </style>
 
   <div id="container">
     <h1>Inspect LD2 file</h1>
     <div id="controls">
-      <label for="hash">Enter hash: </label>
-      <input type="text" id="hash" placeholder="File hash"></input>
-      <label for="fileinput"> or choose file: </label>
       <input type="file" id="fileinput" />
       <button id="downloadFile">Download</button>
     </div>
     <div id="header">
     </div>
-    <table id="fileoverviewtab">
-      <thead>
-        <tr>
-        <th>Table</th>
-        <th>Records</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
-    <div id="tabcontent">
-      <button id="back">Back</button>
-      <h3 id="curtabname"></h3>
-
-      <button id="prev">Previous</button>
-      <button id="next">Next</button>
-
-      <table id="curtabrecords">
-        <thead>
-          <tr>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-
-      <div>Showing records <span id="showfrom"></span> to <span id="showto"></span> of <span id="showtotal"></span></div>
+    <div id="flex">
+      <div id="left">
+        <table id="fileoverviewtab">
+          <thead>
+            <tr>
+            <th>Table</th>
+            <th>Records</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+        <br><br><br><br><br><br><br><br>
+      </div>
+      <div id="right">
+      </div>
     </div>
   </div>
 `;
@@ -141,33 +113,9 @@ class Element extends HTMLElement {
 
     this.reader = null;
     this.curTable = null;
-    this.curOffset = 0;
-    this.recordsPerPage = 20;
 
     this.shadowRoot.getElementById('fileinput').addEventListener('change', this.readSingleFile, false);
-    this.shadowRoot.getElementById('back').addEventListener("click", () => {
-      this.shadowRoot.getElementById('fileoverviewtab').style.display = "table"
-      this.shadowRoot.getElementById('tabcontent').style.display = "none"
-    })
-
-    this.shadowRoot.getElementById('next').addEventListener("click", () => {
-      let meta = this.reader.tables[this.curTable];
-      if(this.curOffset + this.recordsPerPage < meta.recordCount){
-        this.curOffset += this.recordsPerPage;
-        this.showRecords()
-      }
-    })
-    this.shadowRoot.getElementById('prev').addEventListener("click", () => {
-      if(this.curOffset >= this.recordsPerPage){
-        this.curOffset -= this.recordsPerPage;
-        this.showRecords()
-      }
-    })
-
     this.shadowRoot.querySelector("#fileoverviewtab tbody").addEventListener("click", this.tableClicked)
-    this.shadowRoot.getElementById('hash').addEventListener("change", () => {
-      this.loadFileFromHash(this.shadowRoot.getElementById('hash').value)
-    })
   }
 
   async attemptLoadParmFile(){
@@ -180,7 +128,6 @@ class Element extends HTMLElement {
   async loadFileFromHash(fileHash){
     if(!fileHash) return;
     this.shadowRoot.getElementById('downloadFile').style.display = "block"
-    this.shadowRoot.getElementById('hash').value = fileHash
     if(!this.hasAttribute("hidecontrols")){
       pushStateQuery({hash: fileHash})
     }
@@ -205,7 +152,6 @@ class Element extends HTMLElement {
       r.onload = (e) => this.onFile(e, f.name, ext);
 
       pushStateQuery(undefined)
-      this.shadowRoot.getElementById('hash').value = ''
       this.shadowRoot.getElementById('downloadFile').style.display = "none"
 
       switch(ext.toLowerCase()){
@@ -227,6 +173,7 @@ class Element extends HTMLElement {
   }
 
   async onFile(e, filename, ext){
+    this.shadowRoot.getElementById("right").innerHTML = ""
     let buffer = e.target.result;
     switch(ext.toLowerCase()){
       case ".ld2":
@@ -259,6 +206,22 @@ class Element extends HTMLElement {
   async tableClicked(e){
     let tabName = e.target.closest("tr")?.querySelector(".tabname")?.innerText
     if(!tabName) return;
+    let browser = this.shadowRoot.getElementById("right").querySelector("tablebrowser-component")
+    if(!browser){
+      this.shadowRoot.getElementById("right").innerHTML = `
+        <div id="header">
+          <h2>${tabName}</h2>
+        </div>
+        <tablebrowser-component></tablebrowser-component>`
+      browser = this.shadowRoot.getElementById("right").querySelector("tablebrowser-component")
+      browser.setReader(this.reader)
+    }
+    browser.browse(tabName)
+  }
+  /*
+  async tableClicked(e){
+    let tabName = e.target.closest("tr")?.querySelector(".tabname")?.innerText
+    if(!tabName) return;
     this.shadowRoot.getElementById("fileoverviewtab").style.display = "none";
     this.shadowRoot.getElementById("tabcontent").style.display = "table";
     this.shadowRoot.getElementById("curtabname").innerText = tabName
@@ -266,37 +229,7 @@ class Element extends HTMLElement {
     this.curOffset = 0;
     this.showRecords()
   }
-
-  async showRecords(){
-    this.shadowRoot.querySelector("#curtabrecords tbody").innerHTML = '';
-    this.shadowRoot.querySelector("#curtabrecords thead tr").innerHTML = '';
-  
-    let records = await this.reader.getRecordsInRange(this.curTable, this.curOffset, this.recordsPerPage);
-    let meta = this.reader.tables[this.curTable];
-  
-    for(let f of meta.fields){
-      this.shadowRoot.querySelector("#curtabrecords thead tr").innerHTML += `<th>${f.name}</th>`
-    }
-  
-    let tbody = this.shadowRoot.querySelector("#curtabrecords tbody");
-    for(let r of records){
-      let row = '';
-      for(let f of meta.fields){
-        let displayValue = moment.isMoment(r[f.name]) ? r[f.name].format(`D. MMM YYYY ${r[f.name].format('HH:mm:ss') == "00:00:00" ? "" : "HH:mm:ss"}`)
-                         : (r[f.name] !== undefined && r[f.name] !== null)
-                         ? (Array.isArray(r[f.name]) ? JSON.stringify(r[f.name]) : r[f.name])
-                         : "";
-        row += `<td>${displayValue}</td>`
-      }
-      tbody.innerHTML += `<tr>${row}</tr>`;
-    }
-  
-    //Showing records <span id="showfrom"/> to <span id="showto"/> of <span id="showtotal"/>
-  
-    this.shadowRoot.getElementById("showfrom").innerText = this.curOffset + 1;
-    this.shadowRoot.getElementById("showto").innerText = Math.min(meta.recordCount, this.curOffset + this.recordsPerPage);
-    this.shadowRoot.getElementById("showtotal").innerText = meta.recordCount;
-  }
+  */
 
   connectedCallback() {
     on("changed-page-query", elementName, (query) => this.loadFileFromHash(query.hash))
