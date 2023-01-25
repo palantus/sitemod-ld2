@@ -116,14 +116,14 @@ export default class LD2Reader{
       case "date":
         let daysDiff = dataView.getInt32(pos);
         if(daysDiff > 0)
-          return moment("1900-01-01").add(daysDiff, "days")
+          return moment("1900-01-01").add(daysDiff, "days").format("YYYYMMDD")
         break;
 
       case "datetime":
         let daysDiff2 = dataView.getInt32(pos);
         let timeDiff = dataView.getInt32(pos+4);
         if(daysDiff2 > 0)
-          return moment.utc("1900-01-01").add(daysDiff2, "days").add(timeDiff, "seconds").local()
+          return moment.utc("1900-01-01").add(daysDiff2, "days").add(timeDiff, "seconds").local().toISOString();
         break;
 
       case "container":

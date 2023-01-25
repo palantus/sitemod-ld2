@@ -6,7 +6,7 @@ import User from "../../../models/user.mjs"
 export const UNIQUE_TYPE_NAME = "ld2-export-template"
 
 export default class Export extends Entity {
-  initNew({title, owner}) {
+  initNew(title, owner) {
     this.id = nextNum(UNIQUE_TYPE_NAME)
     this.title = title
     this.spec = ""

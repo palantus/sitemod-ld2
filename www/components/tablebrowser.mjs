@@ -1,6 +1,5 @@
 let elementName = "tablebrowser-component"
 
-import moment from "/libs/moment.js"
 import "/components/table-paging.mjs"
 
 const template = document.createElement('template');
@@ -139,8 +138,7 @@ class Element extends HTMLElement {
     for(let r of records){
       let row = '';
       for(let f of this.meta.fields){
-        let displayValue = moment.isMoment(r[f.name]) ? r[f.name].format(`D. MMM YYYY ${r[f.name].format('HH:mm:ss') == "00:00:00" ? "" : "HH:mm:ss"}`)
-                         : (r[f.name] !== undefined && r[f.name] !== null)
+        let displayValue = (r[f.name] !== undefined && r[f.name] !== null)
                          ? (Array.isArray(r[f.name]) ? JSON.stringify(r[f.name]) : r[f.name])
                          : "";
         row += `<td>${displayValue}</td>`

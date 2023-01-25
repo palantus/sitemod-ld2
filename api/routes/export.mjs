@@ -1,5 +1,5 @@
 import express from "express"
-import { noGuest } from "../../../../services/auth.mjs";
+import { noGuest, validateAccess } from "../../../../services/auth.mjs";
 import Export from "../../models/export.mjs";
 const { Router, Request, Response } = express;
 const route = Router();
@@ -14,12 +14,12 @@ export default (app) => {
     let e = Export.lookup(req.params.id)
     if(!e) return res.sendStatus(404);
     if(!e.validateAccess(res, 'r')) return;
-    res.json(e.toObjSpec())
+    res.json(e.toObjSpec(res.locals.user, res.locals.shareKey))
   })
 
   route.get("/", (req, res) => {
     if (!validateAccess(req, res, { permission: "ld2.export.read" })) return;
-    res.json(Export.allUser(res.locals.user, res.locals.shareKey).map(e => e.toObj()))
+    res.json(Export.allUser(res.locals.user, res.locals.shareKey).map(e => e.toObj(res.locals.user, res.locals.shareKey)))
   })
 
   route.post("/", noGuest, (req, res) => {
@@ -27,7 +27,7 @@ export default (app) => {
     if(!req.body.title) throw "title is mandatory"
     let e = new Export(req.body.title, res.locals.user)
     e.patch(req.body, res.locals.user)
-    res.json(e.toObj())
+    res.json(e.toObj(res.locals.user, res.locals.shareKey))
   })
 
   route.patch("/:id", noGuest, (req, res) => {
@@ -36,7 +36,7 @@ export default (app) => {
     if(!e) return res.sendStatus(404);
     if(!e.validateAccess(res, 'w')) return;
     e.patch(req.body, res.locals.user)
-    res.json(e.toObjSpec())
+    res.json(e.toObjSpec(res.locals.user, res.locals.shareKey))
   })
 
   route.delete("/:id", noGuest, (req, res) => {

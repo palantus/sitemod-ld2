@@ -135,6 +135,7 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("export-component").addEventListener("back-clicked", () => {
       this.shadowRoot.getElementById("export-component").classList.toggle("hidden", true)
       this.shadowRoot.getElementById("file-content").classList.toggle("hidden", false)
+      this.shadowRoot.getElementById("controls").classList.toggle("hidden", false)
     })
   }
 
@@ -260,6 +261,7 @@ class Element extends HTMLElement {
 
   async exportCSV(){
     this.shadowRoot.getElementById("file-content").classList.toggle("hidden", true)
+    this.shadowRoot.getElementById("controls").classList.toggle("hidden", true)
     let component = this.shadowRoot.getElementById("export-component")
     await component.init(this.reader)
     component.classList.toggle("hidden", false)
