@@ -38,36 +38,38 @@ template.innerHTML = `
   <div id="container">
     <br>
     <button class="styled" id="back-btn">Back to content</button>
+    <button class="styled" id="toggle-existing-btn">Toggle existing</button>
     <br><br>
     <h2>Query data</h2>
 
-    <h3>Select and existing query or create a new</h3>
-
-    <div id="existing-container">
-      <div>
-        <h4>Mine</h4>
-        <table>
-          <tbody id="mine">
-          </tbody>
-        </table>
+    <div id="existing-container-container">
+      <h3>Select and existing query or create a new</h3>
+      <div id="existing-container">
+        <div>
+          <h4>Mine</h4>
+          <table>
+            <tbody id="mine">
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h4>Common</h4>
+          <table>
+            <tbody id="common">
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h4>Shared</h4>
+          <table>
+            <tbody id="shared">
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div>
-        <h4>Common</h4>
-        <table>
-          <tbody id="common">
-          </tbody>
-        </table>
-      </div>
-      <div>
-        <h4>Shared</h4>
-        <table>
-          <tbody id="shared">
-          </tbody>
-        </table>
-      </div>
+      <br>
+      <button id="new-btn" class="styled">Create new</button>
     </div>
-    <br>
-    <button id="new-btn" class="styled">Create new</button>
 
     <div id="cur-exp-container" class="hidden">
       <ld2-query-component id="cur-exp"></export-ld2-query-component>
@@ -87,6 +89,7 @@ class Element extends HTMLElement {
     this.existingClicked = this.existingClicked.bind(this)
 
     this.shadowRoot.getElementById("back-btn").addEventListener("click", () => this.dispatchEvent(new CustomEvent("back-clicked", {bubbles: true, cancelable: false})))
+    this.shadowRoot.getElementById("toggle-existing-btn").addEventListener("click", () => this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden"))
     this.shadowRoot.getElementById("new-btn").addEventListener("click", this.createNew)
     this.shadowRoot.getElementById("existing-container").addEventListener("click", this.existingClicked)
     
@@ -123,6 +126,7 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("cur-exp").setReader(this.reader)
     this.shadowRoot.getElementById("cur-exp").setAttribute("query", id)
     this.shadowRoot.getElementById("cur-exp-container").classList.toggle("hidden", false)
+    this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden", true)
   }
 
   connectedCallback() {

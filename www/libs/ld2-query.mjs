@@ -31,3 +31,9 @@ class Cache{
     return meta.fields
   }
 }
+
+export function valueToString(value){
+  return (value !== undefined && value !== null)
+  ? (Array.isArray(value) ? JSON.stringify(value) : value)
+  : ""
+}

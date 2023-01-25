@@ -1,5 +1,6 @@
 let elementName = "tablebrowser-component"
 
+import { valueToString } from "../libs/ld2-query.mjs";
 import "/components/table-paging.mjs"
 
 const template = document.createElement('template');
@@ -138,9 +139,7 @@ class Element extends HTMLElement {
     for(let r of records){
       let row = '';
       for(let f of this.meta.fields){
-        let displayValue = (r[f.name] !== undefined && r[f.name] !== null)
-                         ? (Array.isArray(r[f.name]) ? JSON.stringify(r[f.name]) : r[f.name])
-                         : "";
+        let displayValue = valueToString(r[f.name]);
         row += `<td>${displayValue}</td>`
       }
       tbody.innerHTML += `<tr>${row}</tr>`;

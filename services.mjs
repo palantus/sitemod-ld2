@@ -8,7 +8,7 @@ export default async () => {
 
   DataType.lookup("ld2-export-template")?.delete()
 
-  DataType.lookupOrCreate(QueryTypeName, {title: "LD2 query", permission: "ld2.query.read", api: "ld2/query", nameField: "title", uiPath: "ld2/query", acl: "r:private;w:private"})
+  DataType.lookupOrCreate(QueryTypeName, {title: "LD2 query", permission: "ld2.query.read", api: "ld2/query", nameField: "title", acl: "r:private;w:private"})
           .init({typeModel: Query})
 
   return {}
