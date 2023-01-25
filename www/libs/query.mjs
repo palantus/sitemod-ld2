@@ -28,8 +28,8 @@ export class Query{
     for(let ds of this.dataSources){
       ds.run()
 
-      if(ds.name == this.mainDS){
-        return ds.result
+      if(ds.name == this.mainDS.name){
+        return ds.results
       }
     }
     return null;
@@ -91,7 +91,10 @@ class DataSource{
       this.groupBy = new DataSourceGroupBy(spec.groupBy);
     }
 
-    if(spec.join?.ds && spec.join.ds != this.name) this.dsDependencies.add(spec.join.ds);
+    if(spec.join){
+      this.join = new DataSourceJoin(spec.join);
+      if(spec.join.ds != this.name) this.dsDependencies.add(spec.join.ds);
+    }
   }
 
   init(query, records, metaFields){
@@ -99,8 +102,10 @@ class DataSource{
     this.metaFields = metaFields;
 
     for(let field of this.fields){
-      field.init(this, query)
+      field.init(query)
     }
+
+    this.join?.init(query)
   }
 
   run(){
@@ -108,6 +113,10 @@ class DataSource{
 
     if(this.conditions){
       this.results = this.results.filter(r => this.conditions.check(r))
+    }
+
+    if(this.join){
+      this.results = this.join.run(this.results);
     }
 
     if(this.groupBy){
@@ -130,14 +139,47 @@ class DataSourceField{
     this.spec = spec
     this.name = spec.name || spec.field;
     this.field = spec.field
+
+    if(spec.where){
+      this.conditions = new DataSourceConditions(spec.where);
+    }
   }
 
-  init(ds, query){
-
+  init(query){
+    this.query = query
+    if(this.spec.ds){
+      this.ds = query.dataSources.find(ds => ds.name == this.spec.ds)
+    }
+    if(!this.field) throw "Missing field on datasource field";
   }
 
   fill(record, sourceRecord){
-    record[this.name] = sourceRecord[this.field]
+    if(!this.ds){
+      record[this.name] = sourceRecord[this.field]
+      return;
+    } 
+
+    let remoteRecords = this.ds.results
+
+    if(this.conditions){
+      remoteRecords = remoteRecords.filter(r => this.conditions.check(r))
+    }
+
+    if(this.spec.on){
+      let key = this.spec.on.map(f => sourceRecord[f.this]).join("--");
+      remoteRecords = remoteRecords.filter(r => this.spec.on.map(f => r[f.remote]).join("--") == key)
+    }
+
+    switch(this.spec.type){
+      case "first":
+        record[this.name] = remoteRecords[0]?.[this.field] || null
+        break;
+      case "sum":
+        record[this.name] = remoteRecords.reduce((sum, cur) => sum + (cur[this.field]||0), 0)||0;
+        break;
+      default: 
+        throw "Unsupported ds field type: " + this.spec.type
+    }
   }
 }
 
@@ -168,12 +210,17 @@ class DataSourceCondition{
   }
 
   check(record){
+    let val = record[this.spec.field]
     switch(this.spec.type){
       case "range":
-        let val = record[this.spec.field]
         if(this.spec.from && val < this.spec.from) return false;
         if(this.spec.to && val > this.spec.to) return false;
         break;
+      case "fixed":
+        if(this.spec.value != val) return false;
+        break;
+      default: 
+        throw "Unsupported condition type: " + this.spec.type
     }
     return true;
   }
@@ -210,5 +257,38 @@ class DataSourceGroupBy{
       }
     }
     return [...groups.values()]
+  }
+}
+
+class DataSourceJoin{
+  constructor(spec){
+    this.spec = spec
+    this.type = spec.type
+    this.on = spec.on
+  }
+
+  init(query){
+    this.query = query
+    this.ds = query.dataSources.find(ds => ds.name == this.spec.ds)
+    if(!this.type) throw "Missing type in datasource join";
+    if(!this.ds) throw "Missing ds in datasource join";
+    if(!this.on || this.on.length < 1) throw "Missing on in datasource join";
+  }
+
+  run(records){
+    switch(this.type){
+      case "exist":
+        return this.runExist(records);
+      default: 
+        throw "Unsupported join type: " + this.type
+    }
+  }
+
+  runExist(records){
+    let remoteRecords = this.ds.results||[]
+    let genKeyRemote = record => this.on.map(f => record[f.remote]).join("--");
+    let genKeyThis = record => this.on.map(f => record[f.this]).join("--");
+    let remoteKeys = new Set(remoteRecords.map(genKeyRemote));
+    return records.filter(record => remoteKeys.has(genKeyThis(record)))
   }
 }
