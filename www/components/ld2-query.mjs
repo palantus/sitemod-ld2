@@ -1,9 +1,11 @@
 let elementName = "ld2-query-component"
 
 import api from "/system/api.mjs"
-import { alertDialog } from "/components/dialog.mjs"
+import {confirmDialog, alertDialog} from "/components/dialog.mjs"
 import Toast from "/components/toast.mjs"
 import "/components/table-paging.mjs"
+import "/components/field-edit.mjs"
+import "/components/field-list.mjs"
 import "/components/ld2-edit/query.mjs"
 import { runQuery, valueToString } from "../libs/ld2-query.mjs"
 import {saveFileCSV} from "/libs/file.mjs"
@@ -16,12 +18,21 @@ template.innerHTML = `
     table thead tr{
       border-bottom: 1px solid gray;
     }
+    field-list{
+      width: 400px;
+    }
     #spec{width: 500px; min-height: 200px;}
     #result{margin-top: 10px;}
-    #edit-raw-container,#edit-ui-container{margin-bottom: 10px;}
+    #edit-raw-container,#edit-ui-container,#edit-info-container{margin-bottom: 10px;margin-top: 10px;}
   </style>
   <div id="container">
-    <h2 id="title"></h2>
+    <h2 id="title-header"></h2>
+
+    <button id="run-and-show-btn" class="styled">Run and show</button>
+    <button id="run-csv-btn" class="styled">Export to CSV</button>
+    <button class="styled" id="edit-info-btn">Edit info</button>
+    <button class="styled" id="edit-raw-btn">Edit raw JSON</button>
+    <button class="styled" id="edit-ui-btn">Edit in UI</button>
 
     <div id="edit-raw-container" class="hidden">
       <textarea id="spec"></textarea>
@@ -32,11 +43,13 @@ template.innerHTML = `
       <ld2-edit-query-component id="query-ui"></ld2-edit-query-component>
       <button id="save-spec-ui-btn" class="styled">Save</button>
     </div>
-
-    <button id="run-and-show-btn" class="styled">Run and show</button>
-    <button id="run-csv-btn" class="styled">Export to CSV</button>
-    <button class="styled" id="edit-raw-btn">Edit raw JSON</button>
-    <button class="styled" id="edit-ui-btn">Edit in UI</button>
+    <div id="edit-info-container" class="hidden">
+      <field-list labels-pct="20">
+        <field-edit type="text" id="title" field="title" label="Title"></field-edit>
+      </field-list>
+      <br>
+      <button class="styled" id="delete-query-btn">Delete query</button>
+    </div>
 
     <table id="result">
       <thead>
@@ -61,6 +74,9 @@ class Element extends HTMLElement {
     this.saveSpecRaw = this.saveSpecRaw.bind(this)
     this.editRaw = this.editRaw.bind(this)
     this.editUI = this.editUI.bind(this)
+    this.editInfo = this.editInfo.bind(this)
+    this.deleteQuery = this.deleteQuery.bind(this)
+    this.titleChanged = this.titleChanged.bind(this)
 
     this.shadowRoot.getElementById("run-and-show-btn").addEventListener("click", this.runAndShow)
     this.shadowRoot.getElementById("run-csv-btn").addEventListener("click", this.runCSV)
@@ -68,19 +84,22 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("save-spec-ui-btn").addEventListener("click", this.saveSpecUI)
     this.shadowRoot.getElementById("edit-raw-btn").addEventListener("click", this.editRaw)
     this.shadowRoot.getElementById("edit-ui-btn").addEventListener("click", this.editUI)
-
+    this.shadowRoot.getElementById("edit-info-btn").addEventListener("click", this.editInfo)
+    this.shadowRoot.getElementById("title").addEventListener("value-changed", this.titleChanged)
+    this.shadowRoot.getElementById("delete-query-btn").addEventListener("click", this.deleteQuery)
   }
 
   async refreshData(){
     if(!this.queryId) return;
     let query = this.query = await api.get(`ld2/query/${this.queryId}`);
 
-    this.shadowRoot.getElementById("title").innerText = query.title
+    this.shadowRoot.getElementById("title-header").innerText = query.title
   }
 
   hideEditors(){
     this.shadowRoot.getElementById("edit-ui-container").classList.toggle("hidden", true)
     this.shadowRoot.getElementById("edit-raw-container").classList.toggle("hidden", true)
+    this.shadowRoot.getElementById("edit-info-container").classList.toggle("hidden", true)
   }
 
   static get observedAttributes() {
@@ -143,7 +162,8 @@ class Element extends HTMLElement {
       return;
     }
     this.shadowRoot.getElementById("query-ui").setSpec(JSON.parse(this.getCurSpec()))
-    this.shadowRoot.getElementById("edit-raw-container").classList.toggle("hidden", true)
+
+    this.hideEditors();
     this.shadowRoot.getElementById("edit-ui-container").classList.toggle("hidden", false)
   }
 
@@ -153,8 +173,21 @@ class Element extends HTMLElement {
       return;
     }
     this.shadowRoot.getElementById("spec").value = this.getCurSpec()
+
+    this.hideEditors();
     this.shadowRoot.getElementById("edit-raw-container").classList.toggle("hidden", false)
-    this.shadowRoot.getElementById("edit-ui-container").classList.toggle("hidden", true)
+  }
+
+  editInfo(){
+    if(!this.shadowRoot.getElementById("edit-info-container").classList.contains("hidden")){
+      this.shadowRoot.getElementById("edit-info-container").classList.toggle("hidden", true)
+      return;
+    }
+    this.shadowRoot.getElementById("title").setAttribute("value", this.query.title)
+    this.shadowRoot.getElementById("title").setAttribute("patch", `ld2/query/${this.query.id}`)
+
+    this.hideEditors();
+    this.shadowRoot.getElementById("edit-info-container").classList.toggle("hidden", false)
   }
 
   getCurSpec(){
@@ -182,6 +215,17 @@ class Element extends HTMLElement {
 
   async saveSpecUI(){
     new Toast({text: "NOT IMPLEMENTED"})
+  }
+
+  async deleteQuery(){
+    if(!(await confirmDialog(`Are you sure that you want to delete query ${this.query.title}?`))) return;
+    await api.del(`ld2/query/${this.query.id}`)
+    this.dispatchEvent(new CustomEvent("query-deleted", {bubbles: false, cancelable: false}));
+  }
+
+  titleChanged(){
+    this.dispatchEvent(new CustomEvent("title-changed", {bubbles: false, cancelable: false}));
+    this.refreshData();
   }
 
   connectedCallback() {

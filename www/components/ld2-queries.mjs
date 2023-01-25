@@ -40,10 +40,10 @@ template.innerHTML = `
     <button class="styled" id="back-btn">Back to content</button>
     <button class="styled" id="toggle-existing-btn">Toggle existing</button>
     <br><br>
-    <h2>Query data</h2>
+    <h2>Query data in file</h2>
 
     <div id="existing-container-container">
-      <h3>Select and existing query or create a new</h3>
+      <h3>Select an existing query or create a new</h3>
       <div id="existing-container">
         <div>
           <h4>Mine</h4>
@@ -92,7 +92,12 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("toggle-existing-btn").addEventListener("click", () => this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden"))
     this.shadowRoot.getElementById("new-btn").addEventListener("click", this.createNew)
     this.shadowRoot.getElementById("existing-container").addEventListener("click", this.existingClicked)
-    
+    this.shadowRoot.getElementById("cur-exp").addEventListener("query-deleted", () => {
+      this.refreshData()
+      this.shadowRoot.getElementById("cur-exp-container").classList.add("hidden")
+      this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden", false)
+    })
+    this.shadowRoot.getElementById("cur-exp").addEventListener("title-changed", this.refreshData);    
   }
 
   async init(reader){
