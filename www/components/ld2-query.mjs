@@ -194,7 +194,7 @@ class Element extends HTMLElement {
     if(!this.shadowRoot.getElementById("edit-raw-container").classList.contains("hidden")){
       return this.shadowRoot.getElementById("spec").value
     } else if(!this.shadowRoot.getElementById("edit-ui-container").classList.contains("hidden")){
-      return JSON.stringify(this.shadowRoot.getElementById("query-ui").getSpec())
+      return JSON.stringify(this.shadowRoot.getElementById("query-ui").getSpec(), null, 2)
     } else {
       return this.query.spec
     }

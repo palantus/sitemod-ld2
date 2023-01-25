@@ -55,7 +55,7 @@ class Element extends HTMLElement {
   }
 
   getSpec(){
-
+    return this.spec
   }
 
   connectedCallback() {
