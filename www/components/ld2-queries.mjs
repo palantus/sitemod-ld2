@@ -1,10 +1,9 @@
-let elementName = "export-csv-component"
+let elementName = "ld2-queries-component"
 
 import api from "/system/api.mjs"
-import moment from "/libs/moment.js"
 import { promptDialog } from "/components/dialog.mjs"
 import "/components/table-paging.mjs"
-import "/components/export-csv-export.mjs"
+import "/components/ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -26,7 +25,7 @@ template.innerHTML = `
     #existing-container > div > h4{
       border-bottom: 1px solid var(--contrast-color-muted);
     }
-    #existing-container .export{
+    #existing-container .query{
       cursor: pointer;
       user-select: none;
     }
@@ -40,9 +39,9 @@ template.innerHTML = `
     <br>
     <button class="styled" id="back-btn">Back to content</button>
     <br><br>
-    <h2>Export data to CSV-file</h2>
+    <h2>Query data</h2>
 
-    <h3>Select Export or create a new</h3>
+    <h3>Select and existing query or create a new</h3>
 
     <div id="existing-container">
       <div>
@@ -71,7 +70,7 @@ template.innerHTML = `
     <button id="new-btn" class="styled">Create new</button>
 
     <div id="cur-exp-container" class="hidden">
-      <export-csv-export-component id="cur-exp"></export-csv-export-component>
+      <ld2-query-component id="cur-exp"></export-ld2-query-component>
     </div>
   </div>
 `;
@@ -101,10 +100,10 @@ class Element extends HTMLElement {
   }
 
   async refreshData(){
-    let exports = await api.get("ld2/export");
+    let queries = await api.get("ld2/query");
     ["mine", "shared", "common"].forEach(cat => {
-      this.shadowRoot.getElementById(cat).innerHTML = exports.filter(e => e.category == cat).map(e => `
-        <tr data-id="${e.id}" class="export">
+      this.shadowRoot.getElementById(cat).innerHTML = queries.filter(e => e.category == cat).map(e => `
+        <tr data-id="${e.id}" class="query">
           <td>${e.title}</td>
         </tr>
       `).join("")
@@ -114,15 +113,15 @@ class Element extends HTMLElement {
   async createNew(){
     let title = await promptDialog("Enter title")
     if(!title) return;
-    await api.post("ld2/export", {title})
+    await api.post("ld2/query", {title})
     this.refreshData()
   }
 
   async existingClicked(e){
-    let id = e.target?.closest("tr.export")?.getAttribute("data-id");
+    let id = e.target?.closest("tr.query")?.getAttribute("data-id");
     if(!id) return;
     this.shadowRoot.getElementById("cur-exp").setReader(this.reader)
-    this.shadowRoot.getElementById("cur-exp").setAttribute("export", id)
+    this.shadowRoot.getElementById("cur-exp").setAttribute("query", id)
     this.shadowRoot.getElementById("cur-exp-container").classList.toggle("hidden", false)
   }
 

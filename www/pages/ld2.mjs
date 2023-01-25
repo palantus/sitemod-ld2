@@ -4,7 +4,7 @@ import LD2Reader from "/libs/ld2reader.mjs"
 import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/tablebrowser.mjs"
-import "/components/export-csv.mjs"
+import "/components/ld2-queries.mjs"
 import api from "/system/api.mjs"
 import {state, pushStateQuery, setPageTitle} from "/system/core.mjs"
 import {on, off} from "/system/events.mjs"
@@ -18,7 +18,6 @@ template.innerHTML = `
     #container{
         padding: 10px;
         position: relative;
-        overflow: hidden;
         height: calc(100% - 20px);
     }
     h1{
@@ -31,11 +30,12 @@ template.innerHTML = `
     #hash{width: 250px;}
     
     #header span{color: var(--accent-color-light);}
-    #export-csv-btn{margin-bottom: 5px;}
+    #query-btn{margin-bottom: 5px;}
 
     /* Overview */
 
-    #file-content{display: inline;} /* For scroll to work */
+    #file-content{display: inline;
+      overflow: hidden;} /* For scroll to work */
     
     #fileoverviewtab {
         border-collapse: collapse;
@@ -82,10 +82,10 @@ template.innerHTML = `
     <div id="controls">
       <input type="file" id="fileinput" />
     </div>
-    <export-csv-component id="export-component" class="hidden"></export-csv-component>
+    <ld2-queries-component id="query-component" class="hidden"></ld2-queries-component>
     <div id="file-content" class="hidden">
       <div id="header"></div>
-      <button id="export-csv-btn" class="styled">Generate CSV</button>
+      <button id="query-btn" class="styled">Query data</button>
       <button id="downloadFile" class="styled hidden">Download</button>
       <div id="flex">
         <div id="left">
@@ -121,7 +121,7 @@ class Element extends HTMLElement {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.readSingleFile = this.readSingleFile.bind(this)
-    this.exportCSV = this.exportCSV.bind(this)
+    this.queryData = this.queryData.bind(this)
     this.tableClicked = this.tableClicked.bind(this)
     this.exportTableCSV = this.exportTableCSV.bind(this)
 
@@ -129,11 +129,11 @@ class Element extends HTMLElement {
     this.curTable = null;
 
     this.shadowRoot.getElementById('fileinput').addEventListener('change', this.readSingleFile, false);
-    this.shadowRoot.getElementById("export-csv-btn").addEventListener("click", this.exportCSV)
+    this.shadowRoot.getElementById("query-btn").addEventListener("click", this.queryData)
     this.shadowRoot.querySelector("#fileoverviewtab tbody").addEventListener("click", this.tableClicked)
     this.shadowRoot.getElementById("export-table-csv-btn").addEventListener("click", this.exportTableCSV)
-    this.shadowRoot.getElementById("export-component").addEventListener("back-clicked", () => {
-      this.shadowRoot.getElementById("export-component").classList.toggle("hidden", true)
+    this.shadowRoot.getElementById("query-component").addEventListener("back-clicked", () => {
+      this.shadowRoot.getElementById("query-component").classList.toggle("hidden", true)
       this.shadowRoot.getElementById("file-content").classList.toggle("hidden", false)
       this.shadowRoot.getElementById("controls").classList.toggle("hidden", false)
     })
@@ -247,8 +247,7 @@ class Element extends HTMLElement {
     data = data.map(r => {
       let row = []
       for(let f of meta.fields){
-        let displayValue = moment.isMoment(r[f.name]) ? r[f.name].format(`D. MMM YYYY ${r[f.name].format('HH:mm:ss') == "00:00:00" ? "" : "HH:mm:ss"}`)
-                        : (r[f.name] !== undefined && r[f.name] !== null)
+        let displayValue = (r[f.name] !== undefined && r[f.name] !== null)
                         ? (Array.isArray(r[f.name]) ? JSON.stringify(r[f.name]) : r[f.name])
                         : "";
         row.push(displayValue)
@@ -259,10 +258,10 @@ class Element extends HTMLElement {
     saveFileCSV([header, ...data], `${this.curTabName}.csv`)
   }
 
-  async exportCSV(){
+  async queryData(){
     this.shadowRoot.getElementById("file-content").classList.toggle("hidden", true)
     this.shadowRoot.getElementById("controls").classList.toggle("hidden", true)
-    let component = this.shadowRoot.getElementById("export-component")
+    let component = this.shadowRoot.getElementById("query-component")
     await component.init(this.reader)
     component.classList.toggle("hidden", false)
   }

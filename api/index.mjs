@@ -1,10 +1,10 @@
 import ld2 from './routes/ld2.mjs';
-import exp from './routes/export.mjs';
+import query from './routes/query.mjs';
 
 export default (app, fields) => {
   
   ld2(app);
-  exp(app);
+  query(app);
 	
   //GraphQL
 

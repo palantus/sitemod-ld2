@@ -3,9 +3,9 @@ import ACL from "../../../models/acl.mjs"
 import DataType from "../../../models/datatype.mjs"
 import User from "../../../models/user.mjs"
 
-export const UNIQUE_TYPE_NAME = "ld2-export-template"
+export const UNIQUE_TYPE_NAME = "ld2-query"
 
-export default class Export extends Entity {
+export default class Query extends Entity {
   initNew(title, owner) {
     this.id = nextNum(UNIQUE_TYPE_NAME)
     this.title = title
@@ -17,22 +17,22 @@ export default class Export extends Entity {
 
   static lookup(id) {
     if(!id) return null;
-    return query.type(Export).id(id).tag(UNIQUE_TYPE_NAME).first
+    return query.type(Query).id(id).tag(UNIQUE_TYPE_NAME).first
   }
 
   static all(){
-    return query.type(Export).tag(UNIQUE_TYPE_NAME).all
+    return query.type(Query).tag(UNIQUE_TYPE_NAME).all
   }
 
   static allUser(user){
     let type = DataType.lookup(UNIQUE_TYPE_NAME)
-    return query.type(Export).tag(UNIQUE_TYPE_NAME).all.filter(l => new ACL(l, type).hasAccess(user, 'r'))
+    return query.type(Query).tag(UNIQUE_TYPE_NAME).all.filter(l => new ACL(l, type).hasAccess(user, 'r'))
   }
 
   patch(obj, user){
     if(typeof obj.title === "string" && obj.title) this.title = obj.title;
     if(typeof obj.spec === "string") this.spec = obj.spec;
-    if(typeof obj.common === "boolean" && user.hasPermission("ld2.export.admin")) e.common = obj.common;
+    if(typeof obj.common === "boolean" && user.hasPermission("ld2.query.admin")) e.common = obj.common;
   }
 
   hasAccess(user, accessType = 'r', shareKey = null) {
