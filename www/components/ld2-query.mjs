@@ -1,7 +1,7 @@
 let elementName = "ld2-query-component"
 
 import api from "/system/api.mjs"
-import {confirmDialog, alertDialog} from "/components/dialog.mjs"
+import {confirmDialog, alertDialog, promptDialog} from "/components/dialog.mjs"
 import Toast from "/components/toast.mjs"
 import "/components/table-paging.mjs"
 import "/components/field-edit.mjs"
@@ -44,6 +44,7 @@ template.innerHTML = `
     <button class="styled hidden" id="edit-info-btn">Edit info</button>
     <button class="styled hidden" id="edit-raw-btn">Edit raw JSON</button>
     <button class="styled hidden" id="edit-ui-btn">Edit in UI</button>
+    <button class="styled hidden" id="duplicate-btn">Duplicate</button>
 
     <div id="edit-raw-container" class="hidden">
       <textarea id="spec"></textarea>
@@ -93,6 +94,7 @@ class Element extends HTMLElement {
     this.editUI = this.editUI.bind(this)
     this.editInfo = this.editInfo.bind(this)
     this.deleteQuery = this.deleteQuery.bind(this)
+    this.duplicate = this.duplicate.bind(this)
     this.titleChanged = this.titleChanged.bind(this)
     this.log = this.log.bind(this)
 
@@ -106,11 +108,15 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("title").addEventListener("value-changed", this.titleChanged)
     this.shadowRoot.getElementById("description").addEventListener("value-changed", this.refreshData)
     this.shadowRoot.getElementById("delete-query-btn").addEventListener("click", this.deleteQuery)
+    this.shadowRoot.getElementById("duplicate-btn").addEventListener("click", this.duplicate)
     this.shadowRoot.getElementById("common").addEventListener("value-changed", () => new Toast({text: "When marking a query as common, remember to set read permission accordingly!"}))
 
     userPermissions().then(permissions => {
       if(permissions.includes("ld2.query.admin")){
         this.shadowRoot.getElementById("common").classList.remove("hidden")
+      }
+      if(permissions.includes("ld2.query.edit")){
+        this.shadowRoot.getElementById("duplicate-btn").classList.remove("hidden")
       }
     })
   }
@@ -296,6 +302,15 @@ class Element extends HTMLElement {
   titleChanged(){
     this.dispatchEvent(new CustomEvent("title-changed", {bubbles: false, cancelable: false}));
     this.refreshData();
+  }
+
+  async duplicate(){
+    let title = await promptDialog("Enter title for your new query, which will be a copy of the current one", this.query.title)
+    if(title == this.query.title) return alertDialog("Please name the query something new");
+    if(!title) return;
+    await api.post("ld2/query", {title, spec: this.query.spec, description: this.query.description})
+    this.refreshData()
+    this.dispatchEvent(new CustomEvent("duplicated", {bubbles: false, cancelable: false}));
   }
 
   connectedCallback() {

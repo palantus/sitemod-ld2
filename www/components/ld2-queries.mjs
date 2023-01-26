@@ -106,7 +106,12 @@ class Element extends HTMLElement {
       this.shadowRoot.getElementById("cur-exp-container").classList.add("hidden")
       this.toggleExistingQueries(true)
     })
-    this.shadowRoot.getElementById("cur-exp").addEventListener("title-changed", this.refreshData);    
+    this.shadowRoot.getElementById("cur-exp").addEventListener("title-changed", this.refreshData);  
+    this.shadowRoot.getElementById("cur-exp").addEventListener("duplicated", () => {
+      this.refreshData()
+      this.shadowRoot.getElementById("cur-exp-container").classList.add("hidden")
+      this.toggleExistingQueries(true)
+    })
     
     userPermissions().then(permissions => {
       if(permissions.includes("ld2.query.edit")){
