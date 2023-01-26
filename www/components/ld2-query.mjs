@@ -15,6 +15,7 @@ template.innerHTML = `
   <link rel='stylesheet' href='/css/global.css'>
   <link rel='stylesheet' href='/css/searchresults.css'>
   <style> 
+    #description-header{margin-bottom: 10px;}
     table thead tr{
       border-bottom: 1px solid gray;
     }
@@ -27,6 +28,7 @@ template.innerHTML = `
   </style>
   <div id="container">
     <h2 id="title-header"></h2>
+    <div id="description-header"></div>
 
     <button id="run-and-show-btn" class="styled">Run and show</button>
     <button id="run-csv-btn" class="styled">Export to CSV</button>
@@ -45,7 +47,8 @@ template.innerHTML = `
     </div>
     <div id="edit-info-container" class="hidden">
       <field-list labels-pct="20">
-        <field-edit type="text" id="title" field="title" label="Title"></field-edit>
+        <field-edit type="text" id="title" label="Title"></field-edit>
+        <field-edit type="textarea" id="description" label="Description" cols="50" rows="4"></field-edit>
       </field-list>
       <br>
       <button class="styled" id="delete-query-btn">Delete query</button>
@@ -86,6 +89,7 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("edit-ui-btn").addEventListener("click", this.editUI)
     this.shadowRoot.getElementById("edit-info-btn").addEventListener("click", this.editInfo)
     this.shadowRoot.getElementById("title").addEventListener("value-changed", this.titleChanged)
+    this.shadowRoot.getElementById("description").addEventListener("value-changed", this.refreshData)
     this.shadowRoot.getElementById("delete-query-btn").addEventListener("click", this.deleteQuery)
   }
 
@@ -93,7 +97,8 @@ class Element extends HTMLElement {
     if(!this.queryId) return;
     let query = this.query = await api.get(`ld2/query/${this.queryId}`);
 
-    this.shadowRoot.getElementById("title-header").innerText = query.title
+    this.shadowRoot.getElementById("title-header").innerText = query.title||"Untitled"
+    this.shadowRoot.getElementById("description-header").innerText = query.description||""
   }
 
   hideEditors(){
@@ -183,8 +188,10 @@ class Element extends HTMLElement {
       this.shadowRoot.getElementById("edit-info-container").classList.toggle("hidden", true)
       return;
     }
-    this.shadowRoot.getElementById("title").setAttribute("value", this.query.title)
+    this.shadowRoot.getElementById("title").setAttribute("value", this.query.title||"")
     this.shadowRoot.getElementById("title").setAttribute("patch", `ld2/query/${this.query.id}`)
+    this.shadowRoot.getElementById("description").setAttribute("value", this.query.description||"")
+    this.shadowRoot.getElementById("description").setAttribute("patch", `ld2/query/${this.query.id}`)
 
     this.hideEditors();
     this.shadowRoot.getElementById("edit-info-container").classList.toggle("hidden", false)

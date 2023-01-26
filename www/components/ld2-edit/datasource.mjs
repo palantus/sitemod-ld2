@@ -11,6 +11,7 @@ template.innerHTML = `
     :host{display: block;}
     #container{
     }
+    #summary-text{margin-bottom: 5px;}
     #fields ld2-edit-query-field-component{
       margin-bottom: 15px;
     }
@@ -20,43 +21,49 @@ template.innerHTML = `
     button{margin-bottom: 10px;}
   </style>
   <div id="container">
-    <h2>Data source</h2>
-    <field-list labels-pct="20">
-      <field-edit type="text" label="Name" id="name"></field-edit>
-      <field-edit type="text" label="Table" id="table"></field-edit>
-    </field-list>
-    <h3>Fields:</h3>
-    <div id="fields">
+    <h2>Data source: <span id="header-title"></span></h2>
+    <div id="summary">
+      <div id="summary-text"></div>
+      <button id="show-details">Show details</button>
     </div>
-    <button id="add-field" class="styled">Add field</button>
-
-    <h3>Group by:</h3>
-    <field-list labels-pct="20">
-      <field-edit type="text" label="Fields" id="groupfields" title="Enter comma-separated list of fields to group by"></field-edit>
-      <field-edit type="text" label="Sum" id="sumfields" title="Enter comma-separated list of fields to sum"></field-edit>
-    </field-list>
-
-    <h3>Join:</h3>
-    <field-list labels-pct="20">
-      <field-edit type="select" label="Type" id="join-type">
-        <option value="">None</option>
-        <option value="exist">Exist (matching records must exist in remote data source)</option>
-      </field-edit>
-    </field-list>
-    <div id="join-container">
+    <div id="details" class="hidden">
       <field-list labels-pct="20">
-        <field-edit type="text" label="Data source" id="join-ds"></field-edit>
+        <field-edit type="text" label="Name" id="name"></field-edit>
+        <field-edit type="text" label="Table" id="table"></field-edit>
       </field-list>
-      <h4>On:</h4>
-      <div id="join-ons">
+      <h3>Fields:</h3>
+      <div id="fields">
       </div>
-      <button id="add-on" class="styled">Add join field</button>
+      <button id="add-field" class="styled">Add field</button>
+
+      <h3>Group by:</h3>
+      <field-list labels-pct="20">
+        <field-edit type="text" label="Fields" id="groupfields" title="Enter comma-separated list of fields to group by"></field-edit>
+        <field-edit type="text" label="Sum" id="sumfields" title="Enter comma-separated list of fields to sum"></field-edit>
+      </field-list>
+
+      <h3>Join:</h3>
+      <field-list labels-pct="20">
+        <field-edit type="select" label="Type" id="join-type">
+          <option value="">None</option>
+          <option value="exist">Exist (matching records must exist in remote data source)</option>
+        </field-edit>
+      </field-list>
+      <div id="join-container">
+        <field-list labels-pct="20">
+          <field-edit type="text" label="Data source" id="join-ds"></field-edit>
+        </field-list>
+        <h4>On:</h4>
+        <div id="join-ons">
+        </div>
+        <button id="add-on" class="styled">Add join field</button>
+      </div>
+    
+      <h3>Conditions:</h3>
+      <div id="wheres">
+      </div>
+      <button id="add-where" class="styled">Add condition</button>
     </div>
-  
-    <h3>Conditions:</h3>
-    <div id="wheres">
-    </div>
-    <button id="add-where" class="styled">Add condition</button>
   </div>
 `;
 
@@ -67,9 +74,19 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
+    this.shadowRoot.getElementById("show-details").addEventListener("click", () => {
+      this.shadowRoot.getElementById("details").classList.toggle("hidden")
+      this.shadowRoot.getElementById("show-details").innerText = this.shadowRoot.getElementById("details").classList.contains("hidden") ? "Show details" : "Hide details"
+    })
   }
 
   refreshUI(){
+    this.shadowRoot.getElementById("summary-text").innerHTML = `
+      This data source fetches data from <span class="highlight">${this.spec.table}</span>.<br>
+      The output consists of the following columns: ${(this.spec.fields||[]).map(f => `<span class="highlight">${f.name||f.field}</span>`).join(", ")}.
+      `
+
+    this.shadowRoot.getElementById("header-title").innerText = this.spec.name||"N/A"
     this.shadowRoot.getElementById("name").setAttribute("value", this.spec.name||"");
     this.shadowRoot.getElementById("table").setAttribute("value", this.spec.table||"");
 

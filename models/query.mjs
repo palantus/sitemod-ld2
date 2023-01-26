@@ -31,6 +31,7 @@ export default class Query extends Entity {
 
   patch(obj, user){
     if(typeof obj.title === "string" && obj.title) this.title = obj.title;
+    if(typeof obj.description === "string") this.description = obj.description;
     if(typeof obj.spec === "string") this.spec = obj.spec;
     if(typeof obj.common === "boolean" && user.hasPermission("ld2.query.admin")) e.common = obj.common;
   }
@@ -61,14 +62,15 @@ export default class Query extends Entity {
       owner: owner?.toObjSimple()||null,
       access: this.access(user, shareKey),
       common: this.common,
-      category: this.common ? "common" : owner.id == user.id ? "mine" : "shared"
+      category: this.common ? "common" : owner.id == user.id ? "mine" : "shared",
     }
   }
 
   toObjSpec(user, shareKey) {
     return {
       ...this.toObj(user, shareKey),
-      spec: this.spec
+      spec: this.spec,
+      description: this.description||null
     }
   }
 }
