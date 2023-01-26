@@ -9,6 +9,7 @@ const template = document.createElement('template');
 template.innerHTML = `
   <link rel='stylesheet' href='/css/global.css'>
   <style> 
+    #initial-help-text{margin-bottom: 20px;}
     #existing-container{
       display: flex;
       gap:10px;
@@ -41,6 +42,13 @@ template.innerHTML = `
     <button class="styled" id="toggle-existing-btn">Hide queries</button>
     <br><br>
     <h2>Query data in file</h2>
+
+    <div id="initial-help-text">
+      This will allow you to query data in the file chosen before.<br>
+      Note that, if you have selected a file from your own computer, the data will <u>never</u> be transmitted to our server. <br>
+      All processing of queries etc. are done locally on <u>your</u> computer in <u>your</u> browser. <br>
+      This means that it is safe to use this on sensitive customer data.
+    </div>
 
     <div id="existing-container-container">
       <h3>Select an existing query or create a new</h3>
@@ -131,6 +139,7 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("cur-exp").setReader(this.reader)
     this.shadowRoot.getElementById("cur-exp").setAttribute("query", id)
     this.shadowRoot.getElementById("cur-exp-container").classList.toggle("hidden", false)
+    this.shadowRoot.getElementById("initial-help-text").classList.add("hidden")
     this.toggleExistingQueries(false)
   }
 

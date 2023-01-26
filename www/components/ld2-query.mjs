@@ -19,6 +19,12 @@ template.innerHTML = `
     table thead tr{
       border-bottom: 1px solid gray;
     }
+    table th.number, table td.number{
+      text-align: right;
+    }
+    table tbody td, table thead th {
+      padding-left: 15px;
+    }
     field-list{
       width: 400px;
     }
@@ -133,9 +139,9 @@ class Element extends HTMLElement {
     if(result.length < 1) return alertDialog("The query returned no data");
 
     let fields = [...Object.keys(result[0])]
-    this.shadowRoot.querySelector("#result thead").innerHTML = fields.map(f => `<th>${f}</th>`).join("")
+    this.shadowRoot.querySelector("#result thead").innerHTML = fields.map(f => `<th class="${typeof result[0][f]}">${f}</th>`).join("")
     this.shadowRoot.querySelector("#result tbody").innerHTML = result.map(r => `
-        <tr class="result">${fields.map(f => `<td>${valueToString(r[f])}</td>`).join("")}</tr>
+        <tr class="result">${fields.map(f => `<td class="${typeof r[f]}">${valueToString(r[f])}</td>`).join("")}</tr>
       `).join("")
     this.shadowRoot.getElementById("result").classList.remove("hidden")
   }
@@ -152,9 +158,10 @@ class Element extends HTMLElement {
     result = result.map(r => {
       let row = []
       for(let f of fields){
-        let displayValue = (r[f] !== undefined && r[f] !== null)
-                        ? (Array.isArray(r[f]) ? JSON.stringify(r[f]) : r[f])
-                        : "";
+        let displayValue = (r[f] === undefined || r[f] === null) ? ""
+                         : typeof r[f] === "number" ? r[f].toFixed(2)
+                         : Array.isArray(r[f]) ? JSON.stringify(r[f]) 
+                         : r[f];
         row.push(displayValue)
       }
       return row.join(";")

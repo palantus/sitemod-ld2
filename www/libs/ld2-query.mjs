@@ -33,7 +33,8 @@ class Cache{
 }
 
 export function valueToString(value){
-  return (value !== undefined && value !== null)
-  ? (Array.isArray(value) ? JSON.stringify(value) : value)
-  : ""
+  if(value === undefined || value === null) return "";
+  if(typeof value === "number") return value.toLocaleString('en', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+  if(Array.isArray(value)) return JSON.stringify(value);
+  return value;
 }
