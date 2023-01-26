@@ -42,8 +42,8 @@ template.innerHTML = `
     <button id="run-and-show-btn" class="styled">Run and show</button>
     <button id="run-csv-btn" class="styled">Export to CSV</button>
     <button class="styled hidden" id="edit-info-btn">Edit info</button>
-    <button class="styled hidden" id="edit-raw-btn">Edit raw JSON</button>
     <button class="styled hidden" id="edit-ui-btn">Edit in UI</button>
+    <button class="styled hidden" id="edit-raw-btn">Edit raw JSON</button>
     <button class="styled hidden" id="duplicate-btn">Duplicate</button>
 
     <div id="edit-raw-container" class="hidden">
@@ -133,11 +133,10 @@ class Element extends HTMLElement {
     setTimeout(() => this.shadowRoot.getElementById("acl").removeAttribute("disabled"), 100)
 
     userPermissions().then(permissions => {
-      if(permissions.includes("ld2.query.edit") && query.access.includes("w")){
-        this.shadowRoot.getElementById("edit-info-btn").classList.remove("hidden")
-        this.shadowRoot.getElementById("edit-raw-btn").classList.remove("hidden")
-        this.shadowRoot.getElementById("edit-ui-btn").classList.remove("hidden")
-      }
+      let allowEdit = permissions.includes("ld2.query.edit") && query.access.includes("w");
+      this.shadowRoot.getElementById("edit-info-btn").classList.toggle("hidden", !allowEdit)
+      this.shadowRoot.getElementById("edit-raw-btn").classList.toggle("hidden", !allowEdit)
+      this.shadowRoot.getElementById("edit-ui-btn").classList.toggle("hidden", !allowEdit)
     })
   }
 
