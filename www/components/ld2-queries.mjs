@@ -38,7 +38,7 @@ template.innerHTML = `
   <div id="container">
     <br>
     <button class="styled" id="back-btn">Back to content</button>
-    <button class="styled" id="toggle-existing-btn">Toggle existing</button>
+    <button class="styled" id="toggle-existing-btn">Hide queries</button>
     <br><br>
     <h2>Query data in file</h2>
 
@@ -89,13 +89,13 @@ class Element extends HTMLElement {
     this.existingClicked = this.existingClicked.bind(this)
 
     this.shadowRoot.getElementById("back-btn").addEventListener("click", () => this.dispatchEvent(new CustomEvent("back-clicked", {bubbles: true, cancelable: false})))
-    this.shadowRoot.getElementById("toggle-existing-btn").addEventListener("click", () => this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden"))
+    this.shadowRoot.getElementById("toggle-existing-btn").addEventListener("click", () => this.toggleExistingQueries())
     this.shadowRoot.getElementById("new-btn").addEventListener("click", this.createNew)
     this.shadowRoot.getElementById("existing-container").addEventListener("click", this.existingClicked)
     this.shadowRoot.getElementById("cur-exp").addEventListener("query-deleted", () => {
       this.refreshData()
       this.shadowRoot.getElementById("cur-exp-container").classList.add("hidden")
-      this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden", false)
+      this.toggleExistingQueries(true)
     })
     this.shadowRoot.getElementById("cur-exp").addEventListener("title-changed", this.refreshData);    
   }
@@ -131,7 +131,13 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("cur-exp").setReader(this.reader)
     this.shadowRoot.getElementById("cur-exp").setAttribute("query", id)
     this.shadowRoot.getElementById("cur-exp-container").classList.toggle("hidden", false)
-    this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden", true)
+    this.toggleExistingQueries(false)
+  }
+
+  toggleExistingQueries(forceValue){
+    let show = typeof forceValue === "boolean" ? forceValue : this.shadowRoot.getElementById("existing-container-container").classList.contains("hidden")
+    this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden", !show)
+    this.shadowRoot.getElementById("toggle-existing-btn").innerText = show ? "Hide queries" : "Show queries"
   }
 
   connectedCallback() {

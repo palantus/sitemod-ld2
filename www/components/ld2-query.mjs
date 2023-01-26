@@ -116,6 +116,7 @@ class Element extends HTMLElement {
       case "query":
         this.queryId = parseInt(newValue);
         this.hideEditors();
+        this.shadowRoot.getElementById("result").classList.add("hidden")
         this.refreshData();
         break;
     }
@@ -136,6 +137,7 @@ class Element extends HTMLElement {
     this.shadowRoot.querySelector("#result tbody").innerHTML = result.map(r => `
         <tr class="result">${fields.map(f => `<td>${valueToString(r[f])}</td>`).join("")}</tr>
       `).join("")
+    this.shadowRoot.getElementById("result").classList.remove("hidden")
   }
 
   async runCSV(){
