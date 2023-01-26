@@ -12,12 +12,20 @@ export class Query{
         this.mainDS = ds
       }
     }
+    if(!spec.mainDS) {
+      this.mainDS = spec.dataSources[0]
+    }
+    if(!this.mainDS) {
+      throw "Missing or invalid main data source"
+    }
   }
 
   async init(reader){
     this.sortDataSources();
 
     for(let ds of this.dataSources){
+      if(!ds.table) throw "Missing table on data source " + ds.name
+      if(!this.cache.hasTable(ds.table)) throw `Unknown table ${ds.table} on data source ${ds.name}`
       let records = await this.cache.getRecords(ds.table)
       let metaFields = await this.cache.getFields(ds.table)
       ds.init(this, records, metaFields)

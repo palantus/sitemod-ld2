@@ -12,41 +12,44 @@ template.innerHTML = `
   <style>
     :host{display: block;}
     #container{
+      border: 1px solid var(--contrast-color-muted);
+      padding: 5px
     }
     field-list{
       width: 500px;
     }
-    h3{margin-top: 10px;}
+    h3{margin-top: 00px;}
+    field-edit{margin-left: 3px; margin-right: 3px;}
+    #add-on,#add-where{display: block;}
   </style>
   <div id="container">
-    <field-list labels-pct="20">
-      <field-edit type="text" label="Field" id="field"></field-edit>
-      <field-edit type="text" label="Name" id="name"></field-edit>
-      <field-edit type="select" label="Source" id="source">
-        <option value="this">This data source</option>
-        <option value="remote">Another data source</option>
-      </field-edit>
-    </field-list>
+    <h3><span id="field-title"></span></h3>
+
+    Get field <field-edit type="text" label="Field" id="field"></field-edit> from 
+    <field-edit type="select" label="Source" id="source">
+      <option value="this">This data source</option>
+      <option value="remote">Another data source</option>
+    </field-edit>
+    and name it <field-edit type="text" label="Name" id="name"></field-edit>
 
     <div id="remote-fields">
-      <field-list labels-pct="20">
+      Use 
         <field-edit type="text" label="Data source" id="ds"></field-edit>
+      as the source and fetch 
         <field-edit type="select" label="Type" id="type">
           <option value=""></option>
           <option value="sum">Sum of all records</option>
           <option value="first">First record</option>
         </field-edit>
-      </field-list>
+      where
 
-      <h3>Join on:</h3>
-      <div id="ons">
-      </div>
-      <button id="add-on" class="styled">Add field</button>
+      <span id="ons">
+      </span>
+      <button id="add-on" class="styled">Add join field</button>
   
-      <h3>Conditions:</h3>
-      <div id="wheres">
-      </div>
-      <button id="add-where" class="styled">Add field</button>
+      <span id="wheres">
+      </span>
+      <button id="add-where" class="styled">Add condition</button>
     </div>
 
   </div>
@@ -67,6 +70,7 @@ class Element extends HTMLElement {
   }
 
   refreshUI(){
+    this.shadowRoot.getElementById("field-title").innerText = this.spec.name||this.spec.field||"";
     this.shadowRoot.getElementById("name").setAttribute("value", this.spec.name||this.spec.field||"")
     this.shadowRoot.getElementById("field").setAttribute("value", this.spec.field||"")
     this.shadowRoot.getElementById("source").setAttribute("value", this.spec.ds ? "remote" : "this")
@@ -74,17 +78,19 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("ds").setAttribute("value", this.spec.ds||"")
     this.shadowRoot.getElementById("type").setAttribute("value", this.spec.type||"")
     
-    for(let onSpec of this.spec.on||[]){
+    for(let [i, onSpec] of (this.spec.on||[]).entries()){
+      if(i > 0){
+        this.shadowRoot.getElementById("ons").appendChild(document.createTextNode(" and "));
+      }
+
       let on = document.createElement("ld2-edit-query-on-component")
       on.setSpec(onSpec)
-      on.classList.add("section")
       this.shadowRoot.getElementById("ons").appendChild(on);
     }
     
     for(let whereSpec of this.spec.where||[]){
       let where = document.createElement("ld2-edit-query-where-component")
       where.setSpec(whereSpec)
-      where.classList.add("section")
       this.shadowRoot.getElementById("wheres").appendChild(where);
     }
   }

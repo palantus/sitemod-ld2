@@ -135,39 +135,47 @@ class Element extends HTMLElement {
   async runAndShow(){
     let spec = this.getCurSpec()
     if(!spec) return;
-    let result = await runQuery(this.reader, JSON.parse(spec))
-    if(result.length < 1) return alertDialog("The query returned no data");
+    try{
+      let result = await runQuery(this.reader, JSON.parse(spec))
+      if(result.length < 1) return alertDialog("The query returned no data");
 
-    let fields = [...Object.keys(result[0])]
-    this.shadowRoot.querySelector("#result thead").innerHTML = fields.map(f => `<th class="${typeof result[0][f]}">${f}</th>`).join("")
-    this.shadowRoot.querySelector("#result tbody").innerHTML = result.map(r => `
-        <tr class="result">${fields.map(f => `<td class="${typeof r[f]}">${valueToString(r[f])}</td>`).join("")}</tr>
-      `).join("")
-    this.shadowRoot.getElementById("result").classList.remove("hidden")
+      let fields = [...Object.keys(result[0])]
+      this.shadowRoot.querySelector("#result thead").innerHTML = fields.map(f => `<th class="${typeof result[0][f]}">${f}</th>`).join("")
+      this.shadowRoot.querySelector("#result tbody").innerHTML = result.map(r => `
+          <tr class="result">${fields.map(f => `<td class="${typeof r[f]}">${valueToString(r[f])}</td>`).join("")}</tr>
+        `).join("")
+      this.shadowRoot.getElementById("result").classList.remove("hidden")
+    } catch(err){
+      new Toast({text: `Error: ${err}`})
+    }
   }
 
   async runCSV(){
     let spec = this.getCurSpec()
     if(!spec) return;
-    let result = await runQuery(this.reader, JSON.parse(spec))
-    if(result.length < 1) return alertDialog("The query returned no data");
-    
-    let fields = [...Object.keys(result[0])]
-    let header = fields.join(";")
+    try{
+      let result = await runQuery(this.reader, JSON.parse(spec))
+      if(result.length < 1) return alertDialog("The query returned no data");
+      
+      let fields = [...Object.keys(result[0])]
+      let header = fields.join(";")
 
-    result = result.map(r => {
-      let row = []
-      for(let f of fields){
-        let displayValue = (r[f] === undefined || r[f] === null) ? ""
-                         : typeof r[f] === "number" ? r[f].toFixed(2)
-                         : Array.isArray(r[f]) ? JSON.stringify(r[f]) 
-                         : r[f];
-        row.push(displayValue)
-      }
-      return row.join(";")
-    })
+      result = result.map(r => {
+        let row = []
+        for(let f of fields){
+          let displayValue = (r[f] === undefined || r[f] === null) ? ""
+                          : typeof r[f] === "number" ? r[f].toFixed(2)
+                          : Array.isArray(r[f]) ? JSON.stringify(r[f]) 
+                          : r[f];
+          row.push(displayValue)
+        }
+        return row.join(";")
+      })
 
-    saveFileCSV([header, ...result], `${this.query.title}.csv`)
+      saveFileCSV([header, ...result], `${this.query.title}.csv`)
+    } catch(err){
+      new Toast({text: `Error: ${err}`})
+    }
   }
 
   editUI(){

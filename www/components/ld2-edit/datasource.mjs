@@ -19,6 +19,9 @@ template.innerHTML = `
       width: 500px;
     }
     button{margin-bottom: 10px;}
+    #add-on,#add-where{display: block;}
+    #groupfields,#sumfields{width: 300px;}
+    field-edit{margin-left: 3px; margin-right: 3px;}
   </style>
   <div id="container">
     <h2>Data source: <span id="header-title"></span></h2>
@@ -27,41 +30,36 @@ template.innerHTML = `
       <button id="show-details">Show details</button>
     </div>
     <div id="details" class="hidden">
-      <field-list labels-pct="20">
-        <field-edit type="text" label="Name" id="name"></field-edit>
-        <field-edit type="text" label="Table" id="table"></field-edit>
-      </field-list>
-      <h3>Fields:</h3>
+      Get data from table 
+      <field-edit type="text" label="Table" id="table"></field-edit>
+      and name it 
+      <field-edit type="text" label="Name" id="name"></field-edit>
+      <br>
+      Return the following fields:
       <div id="fields">
       </div>
       <button id="add-field" class="styled">Add field</button>
-
-      <h3>Group by:</h3>
-      <field-list labels-pct="20">
-        <field-edit type="text" label="Fields" id="groupfields" title="Enter comma-separated list of fields to group by"></field-edit>
-        <field-edit type="text" label="Sum" id="sumfields" title="Enter comma-separated list of fields to sum"></field-edit>
-      </field-list>
-
-      <h3>Join:</h3>
-      <field-list labels-pct="20">
+      <br>
+      Group by <field-edit type="text" label="Fields" id="groupfields" title="Enter comma-separated list of fields to group by"></field-edit>.
+      <br>
+      Sum the fields <field-edit type="text" label="Sum" id="sumfields" title="Enter comma-separated list of fields to sum"></field-edit>.
+      <br>
+      Join 
         <field-edit type="select" label="Type" id="join-type">
           <option value="">None</option>
           <option value="exist">Exist (matching records must exist in remote data source)</option>
         </field-edit>
-      </field-list>
-      <div id="join-container">
-        <field-list labels-pct="20">
+      <span id="join-container">
+        with data source 
           <field-edit type="text" label="Data source" id="join-ds"></field-edit>
-        </field-list>
-        <h4>On:</h4>
-        <div id="join-ons">
-        </div>
+        where 
+        <span id="join-ons">
+        </span>
         <button id="add-on" class="styled">Add join field</button>
-      </div>
+      </span>
     
-      <h3>Conditions:</h3>
-      <div id="wheres">
-      </div>
+      <span id="wheres">
+      </span>
       <button id="add-where" class="styled">Add condition</button>
     </div>
   </div>
@@ -93,7 +91,6 @@ class Element extends HTMLElement {
     for(let fieldSpec of this.spec.fields||[]){
       let field = document.createElement("ld2-edit-query-field-component")
       field.setSpec(fieldSpec)
-      field.classList.add("section")
       this.shadowRoot.getElementById("fields").appendChild(field);
     }
 
@@ -103,7 +100,6 @@ class Element extends HTMLElement {
     for(let whereSpec of this.spec.where||[]){
       let where = document.createElement("ld2-edit-query-where-component")
       where.setSpec(whereSpec)
-      where.classList.add("section")
       this.shadowRoot.getElementById("wheres").appendChild(where);
     }
 
@@ -112,7 +108,6 @@ class Element extends HTMLElement {
     for(let onSpec of this.spec.join?.on||[]){
       let on = document.createElement("ld2-edit-query-on-component")
       on.setSpec(onSpec)
-      on.classList.add("section")
       this.shadowRoot.getElementById("join-ons").appendChild(on);
     }
     this.shadowRoot.getElementById("join-container").classList.toggle("hidden", !!!this.spec.join?.type)

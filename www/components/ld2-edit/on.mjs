@@ -7,19 +7,18 @@ const template = document.createElement('template');
 template.innerHTML = `
   <link rel='stylesheet' href='/css/global.css'>
   <style>
-    :host{display: block;}
     #container{
     }
-    field-list{
-      width: 500px;
-    }
+    field-edit{margin-left: 3px; margin-right: 3px;}
   </style>
-  <div id="container">
-    <field-list labels-pct="20">
+  <span id="container">
+    the field 
       <field-edit type="text" label="This field" id="this"></field-edit>
+    in this data source must be equal to 
       <field-edit type="text" label="Remote field" id="remote"></field-edit>
-    </field-list>
-  </div>
+    in the other
+    
+  </span>
 `;
 
 class Element extends HTMLElement {

@@ -1,13 +1,17 @@
 import {Query} from "./query.mjs"
 
 export async function runQuery(reader, spec){
-  let cache = new Cache(reader)
-  let query = new Query(spec, cache)
-  await query.init();
-  let result = query.run();
-  console.log(result);
-  query.dataSources.forEach(ds => console.log(ds.name, ds.results))
-  return result;
+  try{
+    let cache = new Cache(reader)
+    let query = new Query(spec, cache)
+    await query.init();
+    let result = query.run();
+    console.log(result);
+    query.dataSources.forEach(ds => console.log(ds.name, ds.results))
+    return result;
+  } catch(err){
+    throw err
+  }
 }
 
 class Cache{
@@ -29,6 +33,10 @@ class Cache{
     let meta = this.reader.tables[tabName];
     this.cacheMeta.set(tabName, meta)
     return meta.fields
+  }
+
+  hasTable(tabName){
+    return this.reader.tables[tabName] !== undefined
   }
 }
 

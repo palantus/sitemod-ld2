@@ -13,29 +13,28 @@ template.innerHTML = `
     field-list{
       width: 500px;
     }
+    field-edit{margin-left: 3px; margin-right: 3px;}
   </style>
   <div id="container">
-    <field-list labels-pct="20">
+    
+    Where 
       <field-edit type="text" label="Field" id="field"></field-edit>
+    is a 
       <field-edit type="select" label="Type" id="type">
         <option value=""></option>
         <option value="fixed">Fixed value</option>
         <option value="range">Range of values</option>
       </field-edit>
-    </field-list>
+    
+    of 
+    <span id="fixed-container" class="hidden">
+      <field-edit type="text" label="Value" id="value"></field-edit>
+    </span>
 
-    <div id="fixed-container" class="hidden">
-      <field-list labels-pct="20">
-        <field-edit type="text" label="Value" id="value"></field-edit>
-      </field-list>
-    </div>
-
-    <div id="range-container" class="hidden">
-      <field-list labels-pct="20">
-        <field-edit type="text" label="From" id="from" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit>
-        <field-edit type="text" label="To" id="to" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit>
-      </field-list>
-    </div>
+    <span id="range-container" class="hidden">
+      <field-edit type="text" label="From" id="from" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit>
+      <field-edit type="text" label="To" id="to" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit>
+    </span>
   </div>
 `;
 
