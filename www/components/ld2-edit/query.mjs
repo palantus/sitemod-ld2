@@ -49,6 +49,8 @@ class Element extends HTMLElement {
       this.shadowRoot.getElementById("details").classList.toggle("hidden")
       this.shadowRoot.getElementById("show-details").innerText = this.shadowRoot.getElementById("details").classList.contains("hidden") ? "Show details" : "Hide details"
     })
+
+    this.shadowRoot.getElementById("add-ds").addEventListener("click", () => this.addDS({}));
   }
 
   refreshUI(){
@@ -60,11 +62,15 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("datasources").innerHTML = '';
     for(let dsSpec of this.spec.dataSources||[]){
-      let ds = document.createElement("ld2-edit-query-ds-component")
-      ds.setSpec(dsSpec)
-      ds.classList.add("section")
-      this.shadowRoot.getElementById("datasources").appendChild(ds);
+      this.addDS(dsSpec)
     }
+  }
+
+  addDS(spec){
+    let ds = document.createElement("ld2-edit-query-ds-component")
+    ds.setSpec(spec)
+    ds.classList.add("section")
+    this.shadowRoot.getElementById("datasources").appendChild(ds);
   }
 
   setSpec(spec){

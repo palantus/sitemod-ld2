@@ -76,6 +76,10 @@ class Element extends HTMLElement {
       this.shadowRoot.getElementById("details").classList.toggle("hidden")
       this.shadowRoot.getElementById("show-details").innerText = this.shadowRoot.getElementById("details").classList.contains("hidden") ? "Show details" : "Hide details"
     })
+
+    this.shadowRoot.getElementById("add-field").addEventListener("click", () => this.addField({}));
+    this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}));
+    this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}));
   }
 
   refreshUI(){
@@ -87,30 +91,32 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("header-title").innerText = this.spec.name||"N/A"
     this.shadowRoot.getElementById("name").setAttribute("value", this.spec.name||"");
     this.shadowRoot.getElementById("table").setAttribute("value", this.spec.table||"");
-
-    for(let fieldSpec of this.spec.fields||[]){
-      let field = document.createElement("ld2-edit-query-field-component")
-      field.setSpec(fieldSpec)
-      this.shadowRoot.getElementById("fields").appendChild(field);
-    }
-
+    this.spec.fields?.forEach(spec => this.addField(spec))
     this.shadowRoot.getElementById("groupfields").setAttribute("value", this.spec.groupBy?.fields?.join(", ")||"");
     this.shadowRoot.getElementById("sumfields").setAttribute("value", this.spec.groupBy?.sum?.join(", ")||"");
-
-    for(let whereSpec of this.spec.where||[]){
-      let where = document.createElement("ld2-edit-query-where-component")
-      where.setSpec(whereSpec)
-      this.shadowRoot.getElementById("wheres").appendChild(where);
-    }
-
+    this.spec.where?.forEach(spec => this.addWhere(spec))
     this.shadowRoot.getElementById("join-type").setAttribute("value", this.spec.join?.type||"");
     this.shadowRoot.getElementById("join-ds").setAttribute("value", this.spec.join?.ds||"");
-    for(let onSpec of this.spec.join?.on||[]){
-      let on = document.createElement("ld2-edit-query-on-component")
-      on.setSpec(onSpec)
-      this.shadowRoot.getElementById("join-ons").appendChild(on);
-    }
+    this.spec.join?.on?.forEach(spec => this.addOn(spec))
     this.shadowRoot.getElementById("join-container").classList.toggle("hidden", !!!this.spec.join?.type)
+  }
+
+  addField(spec){
+    let field = document.createElement("ld2-edit-query-field-component")
+    field.setSpec(spec)
+    this.shadowRoot.getElementById("fields").appendChild(field);
+  }
+
+  addWhere(spec){
+    let where = document.createElement("ld2-edit-query-where-component")
+    where.setSpec(spec)
+    this.shadowRoot.getElementById("wheres").appendChild(where);
+  }
+
+  addOn(spec){
+    let on = document.createElement("ld2-edit-query-on-component")
+    on.setSpec(spec)
+    this.shadowRoot.getElementById("join-ons").appendChild(on);
   }
 
   setSpec(spec){

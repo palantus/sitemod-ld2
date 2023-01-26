@@ -67,6 +67,16 @@ class Element extends HTMLElement {
         this.shadowRoot.getElementById("name").setAttribute("value", this.shadowRoot.getElementById("field").getValue())
       }
     })
+
+    this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}));
+    this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}));
+
+    this.shadowRoot.getElementById("source").addEventListener("value-changed", () => {
+      this.shadowRoot.getElementById("remote-fields").classList.toggle("hidden", this.shadowRoot.getElementById("source").getValue() == "this")
+      if(this.shadowRoot.getElementById("ons").querySelectorAll("ld2-edit-query-on-component").length == 0){
+        this.addOn({})
+      }
+    })
   }
 
   refreshUI(){
@@ -78,21 +88,25 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("ds").setAttribute("value", this.spec.ds||"")
     this.shadowRoot.getElementById("type").setAttribute("value", this.spec.type||"")
     
-    for(let [i, onSpec] of (this.spec.on||[]).entries()){
+    this.spec.join?.on?.forEach(spec => {
       if(i > 0){
         this.shadowRoot.getElementById("ons").appendChild(document.createTextNode(" and "));
       }
+      this.addOn(spec)
+    })
+    this.spec.where?.forEach(spec => this.addWhere(spec))
+  }
 
-      let on = document.createElement("ld2-edit-query-on-component")
-      on.setSpec(onSpec)
-      this.shadowRoot.getElementById("ons").appendChild(on);
-    }
-    
-    for(let whereSpec of this.spec.where||[]){
-      let where = document.createElement("ld2-edit-query-where-component")
-      where.setSpec(whereSpec)
-      this.shadowRoot.getElementById("wheres").appendChild(where);
-    }
+  addWhere(spec){
+    let where = document.createElement("ld2-edit-query-where-component")
+    where.setSpec(spec)
+    this.shadowRoot.getElementById("wheres").appendChild(where);
+  }
+
+  addOn(spec){
+    let on = document.createElement("ld2-edit-query-on-component")
+    on.setSpec(spec)
+    this.shadowRoot.getElementById("ons").appendChild(on);
   }
 
   setSpec(spec){

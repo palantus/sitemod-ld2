@@ -1,12 +1,11 @@
 import {Query} from "./query.mjs"
 
-export async function runQuery(reader, spec){
+export async function runQuery(reader, spec, logger){
   try{
-    let cache = new Cache(reader)
+    let cache = new Cache(reader, logger)
     let query = new Query(spec, cache)
     await query.init();
     let result = query.run();
-    console.log(result);
     query.dataSources.forEach(ds => console.log(ds.name, ds.results))
     return result;
   } catch(err){
@@ -15,14 +14,18 @@ export async function runQuery(reader, spec){
 }
 
 class Cache{
-  constructor(reader){
+  logTexts = [];
+  constructor(reader, logger){
     this.reader = reader
+    this.logger = logger
     this.cacheRecords = new Map()
     this.cacheMeta = new Map()
   }
   async getRecords(tabName){
     if(this.cacheRecords.has(tabName)) return this.cacheRecords.get(tabName)
+    this.log(`Fetching ${this.reader.tables[tabName]?.recordCount?.toLocaleString()||"N/A"} records from table ${tabName}...`)
     let rows = await this.reader.getAllRecords(tabName)
+    this.log(`Finished retrieving ${rows.length} rows from ${tabName}`)
     this.cacheRecords.set(tabName, rows)
     return rows
   }
@@ -37,6 +40,13 @@ class Cache{
 
   hasTable(tabName){
     return this.reader.tables[tabName] !== undefined
+  }
+
+  log(text){
+    this.logTexts.push(text)
+    if(typeof this.logger === "function"){
+      this.logger(text)
+    }
   }
 }
 

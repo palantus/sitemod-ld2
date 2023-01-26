@@ -31,6 +31,7 @@ template.innerHTML = `
     #spec{width: 500px; min-height: 200px;}
     #result{margin-top: 10px;}
     #edit-raw-container,#edit-ui-container,#edit-info-container{margin-bottom: 10px;margin-top: 10px;}
+    #log{margin-top: 15px;}
   </style>
   <div id="container">
     <h2 id="title-header"></h2>
@@ -66,6 +67,8 @@ template.innerHTML = `
       </thead>
       <tbody></tbody>
     </table>
+
+    <div id="log" class="hidden"></div>
   </div>
 `;
 
@@ -79,18 +82,18 @@ class Element extends HTMLElement {
     this.refreshData = this.refreshData.bind(this)
     this.runAndShow = this.runAndShow.bind(this)
     this.runCSV = this.runCSV.bind(this)
-    this.saveSpecUI = this.saveSpecUI.bind(this)
-    this.saveSpecRaw = this.saveSpecRaw.bind(this)
+    this.saveSpec = this.saveSpec.bind(this)
     this.editRaw = this.editRaw.bind(this)
     this.editUI = this.editUI.bind(this)
     this.editInfo = this.editInfo.bind(this)
     this.deleteQuery = this.deleteQuery.bind(this)
     this.titleChanged = this.titleChanged.bind(this)
+    this.log = this.log.bind(this)
 
     this.shadowRoot.getElementById("run-and-show-btn").addEventListener("click", this.runAndShow)
     this.shadowRoot.getElementById("run-csv-btn").addEventListener("click", this.runCSV)
-    this.shadowRoot.getElementById("save-spec-raw-btn").addEventListener("click", this.saveSpecRaw)
-    this.shadowRoot.getElementById("save-spec-ui-btn").addEventListener("click", this.saveSpecUI)
+    this.shadowRoot.getElementById("save-spec-raw-btn").addEventListener("click", this.saveSpec)
+    this.shadowRoot.getElementById("save-spec-ui-btn").addEventListener("click", this.saveSpec)
     this.shadowRoot.getElementById("edit-raw-btn").addEventListener("click", this.editRaw)
     this.shadowRoot.getElementById("edit-ui-btn").addEventListener("click", this.editUI)
     this.shadowRoot.getElementById("edit-info-btn").addEventListener("click", this.editInfo)
@@ -136,7 +139,8 @@ class Element extends HTMLElement {
     let spec = this.getCurSpec()
     if(!spec) return;
     try{
-      let result = await runQuery(this.reader, JSON.parse(spec))
+      this.initLog();
+      let result = await runQuery(this.reader, JSON.parse(spec), this.log)
       if(result.length < 1) return alertDialog("The query returned no data");
 
       let fields = [...Object.keys(result[0])]
@@ -145,8 +149,10 @@ class Element extends HTMLElement {
           <tr class="result">${fields.map(f => `<td class="${typeof r[f]}">${valueToString(r[f])}</td>`).join("")}</tr>
         `).join("")
       this.shadowRoot.getElementById("result").classList.remove("hidden")
+      this.removeLog();
     } catch(err){
       new Toast({text: `Error: ${err}`})
+      this.log(`Error: ${terr}`)
     }
   }
 
@@ -154,7 +160,8 @@ class Element extends HTMLElement {
     let spec = this.getCurSpec()
     if(!spec) return;
     try{
-      let result = await runQuery(this.reader, JSON.parse(spec))
+      this.initLog();
+      let result = await runQuery(this.reader, JSON.parse(spec), this.log)
       if(result.length < 1) return alertDialog("The query returned no data");
       
       let fields = [...Object.keys(result[0])]
@@ -172,10 +179,25 @@ class Element extends HTMLElement {
         return row.join(";")
       })
 
-      saveFileCSV([header, ...result], `${this.query.title}.csv`)
+      await saveFileCSV([header, ...result], `${this.query.title}.csv`)
+      this.removeLog();
     } catch(err){
       new Toast({text: `Error: ${err}`})
+      this.log(`Error: ${terr}`)
     }
+  }
+
+  log(text){
+    this.shadowRoot.getElementById("log").innerHTML += `<div>${text}</div>`
+  }
+
+  initLog(){
+    this.shadowRoot.getElementById("log").innerHTML = ''
+    this.shadowRoot.getElementById("log").classList.remove("hidden")
+  }
+
+  removeLog(){
+    this.shadowRoot.getElementById("log").classList.add("hidden")
   }
 
   editUI(){
@@ -224,7 +246,7 @@ class Element extends HTMLElement {
     }
   }
 
-  async saveSpecRaw(){
+  async saveSpec(){
     let spec = this.getCurSpec()
     try{
       JSON.parse(spec)
@@ -235,10 +257,6 @@ class Element extends HTMLElement {
     await api.patch(`ld2/query/${this.queryId}`, {spec})
     new Toast({text: "Saved!"})
     this.refreshData(false);
-  }
-
-  async saveSpecUI(){
-    new Toast({text: "NOT IMPLEMENTED"})
   }
 
   async deleteQuery(){

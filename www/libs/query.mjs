@@ -21,6 +21,7 @@ export class Query{
   }
 
   async init(){
+    this.cache.log("Initializing query")
     this.sortDataSources();
 
     for(let ds of this.dataSources){
@@ -33,13 +34,16 @@ export class Query{
   }
 
   run(){
+    this.cache.log("Running query")
     for(let ds of this.dataSources){
+      this.cache.log(`Executing data source ${ds.name}`)
       ds.run()
 
       if(ds.name == this.mainDS.name){
         return ds.results
       }
     }
+    this.cache.log("Finished running query")
     return null;
   }
 
