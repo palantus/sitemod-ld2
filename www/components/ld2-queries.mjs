@@ -118,7 +118,7 @@ class Element extends HTMLElement {
   async refreshData(){
     let queries = await api.get("ld2/query");
     ["mine", "shared", "common"].forEach(cat => {
-      this.shadowRoot.getElementById(cat).innerHTML = queries.filter(e => e.category == cat).map(e => `
+      this.shadowRoot.getElementById(cat).innerHTML = queries.filter(e => e.category == cat).sort((a, b) => a.title.toLowerCase() < b.title.toLowerCase() ? -1 : 1).map(e => `
         <tr data-id="${e.id}" class="query">
           <td>${e.title}</td>
         </tr>

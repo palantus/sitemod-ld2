@@ -64,7 +64,15 @@ class Element extends HTMLElement {
   }
 
   getSpec(){
-    
+    let newSpec = {
+      field: this.shadowRoot.getElementById("field").getValue(),
+      type: this.shadowRoot.getElementById("type").getValue(),
+      value: this.shadowRoot.getElementById("value").getValue() ? this.shadowRoot.getElementById("value").getValue() : undefined,
+      from: this.shadowRoot.getElementById("from").getValue() ? this.shadowRoot.getElementById("from").getValue() : undefined,
+      to: this.shadowRoot.getElementById("to").getValue() ? this.shadowRoot.getElementById("to").getValue() : undefined,
+    }
+    this.spec = newSpec
+    return this.spec
   }
 
   connectedCallback() {

@@ -119,7 +119,25 @@ class Element extends HTMLElement {
   }
 
   getSpec(){
-    
+    let newSpec = {
+      name: this.shadowRoot.getElementById("name").getValue(),
+      table: this.shadowRoot.getElementById("table").getValue(),
+      fields: [...this.shadowRoot.getElementById("fields").querySelectorAll("ld2-edit-query-field-component")].map(e => e.getSpec()),
+      groupBy: (this.shadowRoot.getElementById("groupfields").getValue() || this.shadowRoot.getElementById("groupfields").getValue()) ? {
+        fields: this.shadowRoot.getElementById("groupfields").getValue() ? this.shadowRoot.getElementById("groupfields").getValue().split(",").map(f => f.trim()) : undefined,
+        sum: this.shadowRoot.getElementById("sumfields").getValue() ? this.shadowRoot.getElementById("sumfields").getValue().split(",").map(f => f.trim()) : undefined,
+      } : undefined,
+      where: this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0
+        ? [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()) 
+        : undefined,
+      join: this.shadowRoot.getElementById("join-type").getValue() ? {
+        type: this.shadowRoot.getElementById("join-type").getValue(),
+        ds: this.shadowRoot.getElementById("join-ds").getValue(),
+        on: [...this.shadowRoot.getElementById("join-ons").querySelectorAll("ld2-edit-query-on-component")].map(e => e.getSpec()),
+      } : undefined,
+    }
+    this.spec = newSpec
+    return this.spec
   }
 
   connectedCallback() {

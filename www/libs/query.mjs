@@ -20,7 +20,7 @@ export class Query{
     }
   }
 
-  async init(reader){
+  async init(){
     this.sortDataSources();
 
     for(let ds of this.dataSources){

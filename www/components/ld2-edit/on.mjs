@@ -41,7 +41,12 @@ class Element extends HTMLElement {
   }
 
   getSpec(){
-    
+    let newSpec = {
+      remote: this.shadowRoot.getElementById("remote").getValue(),
+      this: this.shadowRoot.getElementById("this").getValue(),
+    }
+    this.spec = newSpec
+    return this.spec
   }
 
   connectedCallback() {
