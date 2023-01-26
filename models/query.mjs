@@ -33,7 +33,7 @@ export default class Query extends Entity {
     if(typeof obj.title === "string" && obj.title) this.title = obj.title;
     if(typeof obj.description === "string") this.description = obj.description;
     if(typeof obj.spec === "string") this.spec = obj.spec;
-    if(typeof obj.common === "boolean" && user.hasPermission("ld2.query.admin")) e.common = obj.common;
+    if(typeof obj.common === "boolean" && user.hasPermission("ld2.query.admin")) this.common = obj.common;
   }
 
   hasAccess(user, accessType = 'r', shareKey = null) {

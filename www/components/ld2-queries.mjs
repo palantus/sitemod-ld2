@@ -2,6 +2,7 @@ let elementName = "ld2-queries-component"
 
 import api from "/system/api.mjs"
 import { promptDialog } from "/components/dialog.mjs"
+import {userPermissions} from "/system/user.mjs"
 import "/components/table-paging.mjs"
 import "/components/ld2-query.mjs"
 
@@ -76,7 +77,7 @@ template.innerHTML = `
         </div>
       </div>
       <br>
-      <button id="new-btn" class="styled">Create new</button>
+      <button id="new-btn" class="styled hidden">Create new</button>
     </div>
 
     <div id="cur-exp-container" class="hidden">
@@ -106,6 +107,12 @@ class Element extends HTMLElement {
       this.toggleExistingQueries(true)
     })
     this.shadowRoot.getElementById("cur-exp").addEventListener("title-changed", this.refreshData);    
+    
+    userPermissions().then(permissions => {
+      if(permissions.includes("ld2.query.edit")){
+        this.shadowRoot.getElementById("new-btn").classList.remove("hidden")
+      }
+    })
   }
 
   async init(reader){
@@ -147,6 +154,7 @@ class Element extends HTMLElement {
     let show = typeof forceValue === "boolean" ? forceValue : this.shadowRoot.getElementById("existing-container-container").classList.contains("hidden")
     this.shadowRoot.getElementById("existing-container-container").classList.toggle("hidden", !show)
     this.shadowRoot.getElementById("toggle-existing-btn").innerText = show ? "Hide queries" : "Show queries"
+    if(show) this.refreshData();
   }
 
   connectedCallback() {

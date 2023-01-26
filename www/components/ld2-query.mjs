@@ -9,6 +9,8 @@ import "/components/field-list.mjs"
 import "/components/ld2-edit/query.mjs"
 import { runQuery, valueToString } from "../libs/ld2-query.mjs"
 import {saveFileCSV} from "/libs/file.mjs"
+import {userPermissions} from "/system/user.mjs"
+import "/components/acl.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -39,9 +41,9 @@ template.innerHTML = `
 
     <button id="run-and-show-btn" class="styled">Run and show</button>
     <button id="run-csv-btn" class="styled">Export to CSV</button>
-    <button class="styled" id="edit-info-btn">Edit info</button>
-    <button class="styled" id="edit-raw-btn">Edit raw JSON</button>
-    <button class="styled" id="edit-ui-btn">Edit in UI</button>
+    <button class="styled hidden" id="edit-info-btn">Edit info</button>
+    <button class="styled hidden" id="edit-raw-btn">Edit raw JSON</button>
+    <button class="styled hidden" id="edit-ui-btn">Edit in UI</button>
 
     <div id="edit-raw-container" class="hidden">
       <textarea id="spec"></textarea>
@@ -56,9 +58,13 @@ template.innerHTML = `
       <field-list labels-pct="20">
         <field-edit type="text" id="title" label="Title"></field-edit>
         <field-edit type="textarea" id="description" label="Description" cols="50" rows="4"></field-edit>
+        <field-edit type="checkbox" id="common" label="Common" class="hidden"></field-edit>
       </field-list>
       <br>
       <button class="styled" id="delete-query-btn">Delete query</button>
+      <br><br>
+      <h3>Permissions:</h3>
+      <acl-component id="acl" rights="rw" disabled always-show></acl-component>
     </div>
 
     <table id="result">
@@ -100,6 +106,13 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("title").addEventListener("value-changed", this.titleChanged)
     this.shadowRoot.getElementById("description").addEventListener("value-changed", this.refreshData)
     this.shadowRoot.getElementById("delete-query-btn").addEventListener("click", this.deleteQuery)
+    this.shadowRoot.getElementById("common").addEventListener("value-changed", () => new Toast({text: "When marking a query as common, remember to set read permission accordingly!"}))
+
+    userPermissions().then(permissions => {
+      if(permissions.includes("ld2.query.admin")){
+        this.shadowRoot.getElementById("common").classList.remove("hidden")
+      }
+    })
   }
 
   async refreshData(){
@@ -108,6 +121,18 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("title-header").innerText = query.title||"Untitled"
     this.shadowRoot.getElementById("description-header").innerText = query.description||""
+
+    this.shadowRoot.getElementById("acl").setAttribute("type", "ld2-query")
+    this.shadowRoot.getElementById("acl").setAttribute("entity-id", query.id)
+    setTimeout(() => this.shadowRoot.getElementById("acl").removeAttribute("disabled"), 100)
+
+    userPermissions().then(permissions => {
+      if(permissions.includes("ld2.query.edit") && query.access.includes("w")){
+        this.shadowRoot.getElementById("edit-info-btn").classList.remove("hidden")
+        this.shadowRoot.getElementById("edit-raw-btn").classList.remove("hidden")
+        this.shadowRoot.getElementById("edit-ui-btn").classList.remove("hidden")
+      }
+    })
   }
 
   hideEditors(){
@@ -232,6 +257,8 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("title").setAttribute("patch", `ld2/query/${this.query.id}`)
     this.shadowRoot.getElementById("description").setAttribute("value", this.query.description||"")
     this.shadowRoot.getElementById("description").setAttribute("patch", `ld2/query/${this.query.id}`)
+    this.shadowRoot.getElementById("common").setAttribute("value", this.query.common||false)
+    this.shadowRoot.getElementById("common").setAttribute("patch", `ld2/query/${this.query.id}`)
 
     this.hideEditors();
     this.shadowRoot.getElementById("edit-info-container").classList.toggle("hidden", false)

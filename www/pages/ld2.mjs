@@ -10,6 +10,7 @@ import {state, pushStateQuery, setPageTitle} from "/system/core.mjs"
 import {on, off} from "/system/events.mjs"
 import { alertDialog } from "/components/dialog.mjs"
 import {saveFileCSV} from "/libs/file.mjs"
+import {userPermissions} from "/system/user.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -85,7 +86,7 @@ template.innerHTML = `
     <ld2-queries-component id="query-component" class="hidden"></ld2-queries-component>
     <div id="file-content" class="hidden">
       <div id="header"></div>
-      <button id="query-btn" class="styled">Query data</button>
+      <button id="query-btn" class="styled hidden">Query data</button>
       <button id="downloadFile" class="styled hidden">Download</button>
       <div id="flex">
         <div id="left">
@@ -136,6 +137,11 @@ class Element extends HTMLElement {
       this.shadowRoot.getElementById("query-component").classList.toggle("hidden", true)
       this.shadowRoot.getElementById("file-content").classList.toggle("hidden", false)
       this.shadowRoot.getElementById("controls").classList.toggle("hidden", false)
+    })
+    userPermissions().then(permissions => {
+      if(permissions.includes("ld2.query.read")){
+        this.shadowRoot.getElementById("query-btn").classList.remove("hidden")
+      }
     })
   }
 
