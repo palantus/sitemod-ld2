@@ -39,6 +39,7 @@ template.innerHTML = `
         <field-edit type="select" label="Type" id="type">
           <option value=""></option>
           <option value="sum">Sum of all records</option>
+          <option value="count">Record count</option>
           <option value="first">First record</option>
         </field-edit>
       where
@@ -88,12 +89,10 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("ds").setAttribute("value", this.spec.ds||"")
     this.shadowRoot.getElementById("type").setAttribute("value", this.spec.type||"")
     
-    this.spec.join?.on?.forEach(spec => {
-      if(i > 0){
-        this.shadowRoot.getElementById("ons").appendChild(document.createTextNode(" and "));
-      }
-      this.addOn(spec)
-    })
+    this.shadowRoot.getElementById("wheres").innerHTML = ""
+    this.shadowRoot.getElementById("ons").innerHTML = ""
+
+    this.spec.on?.forEach(spec => this.addOn(spec))
     this.spec.where?.forEach(spec => this.addWhere(spec))
   }
 
@@ -104,6 +103,9 @@ class Element extends HTMLElement {
   }
 
   addOn(spec){
+    if(this.shadowRoot.getElementById("ons").childNodes.length > 0){
+      this.shadowRoot.getElementById("ons").appendChild(document.createTextNode(" and "));
+    }
     let on = document.createElement("ld2-edit-query-on-component")
     on.setSpec(spec)
     this.shadowRoot.getElementById("ons").appendChild(on);
@@ -121,7 +123,7 @@ class Element extends HTMLElement {
       ds: this.shadowRoot.getElementById("ds").getValue()||undefined,
       type: this.shadowRoot.getElementById("type").getValue()||undefined,
       on: this.shadowRoot.getElementById("ons").querySelectorAll("ld2-edit-query-on-component").length > 0 ? [...this.shadowRoot.getElementById("ons").querySelectorAll("ld2-edit-query-on-component")].map(e => e.getSpec()) : undefined,
-      where: this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0 ? [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()) : undefined,
+      where: this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0 ? [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()).filter(spec => !!spec) : undefined,
     }
     this.spec = newSpec
     return this.spec

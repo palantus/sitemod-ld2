@@ -51,12 +51,14 @@ export class Query{
     let sortedDataSources = []
     let addedThisIteration = null;
     let addedDS = new Set();
-    while(sortedDataSources.length < this.dataSources.length || addedThisIteration === null || addedThisIteration > 0){
+    while(sortedDataSources.length < this.dataSources.length && (addedThisIteration === null || addedThisIteration > 0)){
       addedThisIteration = 0;
       for(let ds of this.dataSources){
         if(addedDS.has(ds.name)) continue;
         if(ds.dsDependencies.size > 0){
-          if([...ds.dsDependencies].find(name => !addedDS.has(name))){
+          let unmetDependency = [...ds.dsDependencies].find(name => !addedDS.has(name))
+          if(unmetDependency){
+            if(!this.dataSources.find(ds => ds.name == unmetDependency)) throw `Data source ${unmetDependency} doesn't exist. The data source ${ds.name} depends on it.`
             continue;
           }
         }
@@ -161,6 +163,7 @@ class DataSourceField{
     this.query = query
     if(this.spec.ds){
       this.ds = query.dataSources.find(ds => ds.name == this.spec.ds)
+      if(!this.ds) throw `Data source ${this.spec.ds} on field ${this.name} doesn't exist`
     }
     if(!this.field) throw "Missing field on datasource field";
   }
@@ -169,7 +172,7 @@ class DataSourceField{
     if(!this.ds){
       record[this.name] = sourceRecord[this.field]
       return;
-    } 
+    }
 
     let remoteRecords = this.ds.results
 
@@ -188,6 +191,9 @@ class DataSourceField{
         break;
       case "sum":
         record[this.name] = remoteRecords.reduce((sum, cur) => sum + (cur[this.field]||0), 0)||0;
+        break;
+      case "count":
+        record[this.name] = remoteRecords.length;
         break;
       default: 
         throw "Unsupported ds field type: " + this.spec.type
@@ -230,6 +236,9 @@ class DataSourceCondition{
         break;
       case "fixed":
         if(this.spec.value != val) return false;
+        break;
+      case "fixed-not":
+        if(this.spec.value == val) return false;
         break;
       default: 
         throw "Unsupported condition type: " + this.spec.type

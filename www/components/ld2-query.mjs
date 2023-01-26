@@ -138,6 +138,7 @@ class Element extends HTMLElement {
   async runAndShow(){
     let spec = this.getCurSpec()
     if(!spec) return;
+    this.hideEditors();
     try{
       this.initLog();
       let result = await runQuery(this.reader, JSON.parse(spec), this.log)

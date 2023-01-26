@@ -143,6 +143,12 @@ class Element extends HTMLElement {
     let hash = state().query.hash || this.getAttribute("hash")
     if(hash){
       this.loadFileFromHash(hash)
+      return;
+    }
+    let id = state().query["file-id"] || this.getAttribute("file-id")
+    if(id){
+      this.loadFileFromId(id)
+      return;
     }
   }
 
@@ -156,6 +162,22 @@ class Element extends HTMLElement {
     let fileMeta = await api.get(`file/${fileHash}`)
     let ext = fileMeta.name.split(".").pop();
     let response = await api.fetch(`file/download/${fileHash}`)
+    let data = ext == "ld2" ? await response.blob() : await response.text();
+    this.onFile({target: {result: data}}, fileMeta.name, "." + ext)
+
+    this.shadowRoot.getElementById("downloadFile").addEventListener("click", () => window.open(fileMeta.links.download, '_blank'))
+  }
+
+  async loadFileFromId(id){
+    if(!id) return;
+    this.shadowRoot.getElementById('downloadFile').classList.toggle("hidden", false)
+    if(!this.hasAttribute("hidecontrols")){
+      pushStateQuery({"file-id": id})
+    }
+
+    let fileMeta = await api.get(`file/${id}`)
+    let ext = fileMeta.name.split(".").pop();
+    let response = await api.fetch(`file/download/${id}`)
     let data = ext == "ld2" ? await response.blob() : await response.text();
     this.onFile({target: {result: data}}, fileMeta.name, "." + ext)
 

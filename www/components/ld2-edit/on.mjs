@@ -28,6 +28,11 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
+    this.shadowRoot.getElementById("this").addEventListener("value-changed", () => {
+      if(!this.shadowRoot.getElementById("remote").getValue()){
+        this.shadowRoot.getElementById("remote").setAttribute("value", this.shadowRoot.getElementById("this").getValue())
+      }
+    })
   }
 
   refreshUI(){

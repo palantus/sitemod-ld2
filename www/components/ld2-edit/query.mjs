@@ -81,7 +81,7 @@ class Element extends HTMLElement {
   getSpec(){
     let newSpec = {
       mainDS: this.shadowRoot.getElementById("main-ds").getValue(),
-      dataSources: [...this.shadowRoot.getElementById("datasources").querySelectorAll("ld2-edit-query-ds-component")].map(dsE => dsE.getSpec())
+      dataSources: [...this.shadowRoot.getElementById("datasources").querySelectorAll("ld2-edit-query-ds-component")].map(dsE => dsE.getSpec()).filter(spec => !!spec)
     }
     this.spec = newSpec
     return this.spec

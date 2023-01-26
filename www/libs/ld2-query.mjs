@@ -9,6 +9,7 @@ export async function runQuery(reader, spec, logger){
     query.dataSources.forEach(ds => console.log(ds.name, ds.results))
     return result;
   } catch(err){
+    logger?.(err)
     throw err
   }
 }

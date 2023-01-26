@@ -72,6 +72,8 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
+    this.storeAndRefreshUI = this.storeAndRefreshUI.bind(this)
+
     this.shadowRoot.getElementById("show-details").addEventListener("click", () => {
       this.shadowRoot.getElementById("details").classList.toggle("hidden")
       this.shadowRoot.getElementById("show-details").innerText = this.shadowRoot.getElementById("details").classList.contains("hidden") ? "Show details" : "Hide details"
@@ -80,6 +82,9 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("add-field").addEventListener("click", () => this.addField({}));
     this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}));
     this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}));
+
+    this.shadowRoot.getElementById("table").addEventListener("value-changed", this.storeAndRefreshUI);
+    this.shadowRoot.getElementById("name").addEventListener("value-changed", this.storeAndRefreshUI);
   }
 
   refreshUI(){
@@ -87,6 +92,10 @@ class Element extends HTMLElement {
       This data source fetches data from <span class="highlight">${this.spec.table}</span>.<br>
       The output consists of the following columns: ${(this.spec.fields||[]).map(f => `<span class="highlight">${f.name||f.field}</span>`).join(", ")}.
       `
+
+    this.shadowRoot.getElementById("fields").innerHTML = ""
+    this.shadowRoot.getElementById("wheres").innerHTML = ""
+    this.shadowRoot.getElementById("join-ons").innerHTML = ""
 
     this.shadowRoot.getElementById("header-title").innerText = this.spec.name||"N/A"
     this.shadowRoot.getElementById("name").setAttribute("value", this.spec.name||"");
@@ -99,6 +108,11 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("join-ds").setAttribute("value", this.spec.join?.ds||"");
     this.spec.join?.on?.forEach(spec => this.addOn(spec))
     this.shadowRoot.getElementById("join-container").classList.toggle("hidden", !!!this.spec.join?.type)
+  }
+
+  storeAndRefreshUI(){
+    this.getSpec();
+    this.refreshUI();
   }
 
   addField(spec){
@@ -134,7 +148,7 @@ class Element extends HTMLElement {
         sum: this.shadowRoot.getElementById("sumfields").getValue() ? this.shadowRoot.getElementById("sumfields").getValue().split(",").map(f => f.trim()) : undefined,
       } : undefined,
       where: this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0
-        ? [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()) 
+        ? [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()).filter(spec => !!spec) 
         : undefined,
       join: this.shadowRoot.getElementById("join-type").getValue() ? {
         type: this.shadowRoot.getElementById("join-type").getValue(),
@@ -143,7 +157,7 @@ class Element extends HTMLElement {
       } : undefined,
     }
     this.spec = newSpec
-    return this.spec
+    return this.spec.name && this.spec.table ? this.spec : null
   }
 
   connectedCallback() {

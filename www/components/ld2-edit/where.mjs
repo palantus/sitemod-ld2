@@ -19,20 +19,23 @@ template.innerHTML = `
     
     Where 
       <field-edit type="text" label="Field" id="field"></field-edit>
-    is a 
+    is 
       <field-edit type="select" label="Type" id="type">
         <option value=""></option>
-        <option value="fixed">Fixed value</option>
-        <option value="range">Range of values</option>
+        <option value="fixed">A fixed value</option>
+        <option value="fixed-not">Anything but</option>
+        <option value="range">A range of values</option>
       </field-edit>
     
-    of 
     <span id="fixed-container" class="hidden">
+      of 
       <field-edit type="text" label="Value" id="value"></field-edit>
     </span>
 
     <span id="range-container" class="hidden">
+      between
       <field-edit type="text" label="From" id="from" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit>
+      and 
       <field-edit type="text" label="To" id="to" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit>
     </span>
   </div>
@@ -45,6 +48,10 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
+    this.shadowRoot.getElementById("type").addEventListener("value-changed", () => {
+      this.shadowRoot.getElementById("fixed-container").classList.toggle("hidden", this.shadowRoot.getElementById("type").getValue() != "fixed" && this.shadowRoot.getElementById("type").getValue() != "fixed-not")
+      this.shadowRoot.getElementById("range-container").classList.toggle("hidden", this.shadowRoot.getElementById("type").getValue() != "range")
+    })
   }
 
   refreshUI(){
@@ -54,7 +61,7 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("from").setAttribute("value", this.spec.from||"")
     this.shadowRoot.getElementById("to").setAttribute("value", this.spec.to||"")
 
-    this.shadowRoot.getElementById("fixed-container").classList.toggle("hidden", this.spec.type != "fixed")
+    this.shadowRoot.getElementById("fixed-container").classList.toggle("hidden", this.spec.type != "fixed" && this.spec.type != "fixed-not")
     this.shadowRoot.getElementById("range-container").classList.toggle("hidden", this.spec.type != "range")
   }
 
@@ -72,7 +79,7 @@ class Element extends HTMLElement {
       to: this.shadowRoot.getElementById("to").getValue() ? this.shadowRoot.getElementById("to").getValue() : undefined,
     }
     this.spec = newSpec
-    return this.spec
+    return this.spec.type && this.spec.field ? this.spec : null
   }
 
   connectedCallback() {
