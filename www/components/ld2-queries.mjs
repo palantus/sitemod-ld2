@@ -21,7 +21,7 @@ template.innerHTML = `
       max-width: 300px;
       min-width: 100px;
       border: 1px solid var(--contrast-color-muted);
-      overflow-y: scroll;
+      overflow-y: auto;
       padding: 5px;
     }
     #existing-container > div > h4{
