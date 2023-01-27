@@ -32,7 +32,7 @@ template.innerHTML = `
     }
     #spec{width: 500px; min-height: 200px;}
     #result{margin-top: 10px;}
-    #edit-raw-container,#edit-ui-container,#edit-info-container{margin-bottom: 10px;margin-top: 10px;}
+    #edit-raw-container,#edit-ui-container,#edit-info-container{margin-bottom: 30px;margin-top: 10px;}
     #log{margin-top: 15px;}
   </style>
   <div id="container">

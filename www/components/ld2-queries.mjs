@@ -31,6 +31,9 @@ template.innerHTML = `
       cursor: pointer;
       user-select: none;
     }
+    #existing-container .query:hover{
+      background: var(--table-hover);
+    }
     #cur-exp-container{
       margin-top: 10px;
       padding-top: 5px;
