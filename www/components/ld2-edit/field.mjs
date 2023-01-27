@@ -126,7 +126,7 @@ class Element extends HTMLElement {
       where: this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0 ? [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()).filter(spec => !!spec) : undefined,
     }
     this.spec = newSpec
-    return this.spec
+    return this.spec.field ? this.spec : null
   }
 
   connectedCallback() {

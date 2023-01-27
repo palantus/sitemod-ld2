@@ -85,6 +85,12 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("table").addEventListener("value-changed", this.storeAndRefreshUI);
     this.shadowRoot.getElementById("name").addEventListener("value-changed", this.storeAndRefreshUI);
+
+    this.shadowRoot.getElementById("table").addEventListener("value-changed", () => {
+      if(!this.shadowRoot.getElementById("name").getValue()){
+        this.shadowRoot.getElementById("name").setAttribute("value", this.shadowRoot.getElementById("table").getValue())
+      }
+    })
   }
 
   refreshUI(){
@@ -142,7 +148,7 @@ class Element extends HTMLElement {
     let newSpec = {
       name: this.shadowRoot.getElementById("name").getValue(),
       table: this.shadowRoot.getElementById("table").getValue(),
-      fields: [...this.shadowRoot.getElementById("fields").querySelectorAll("ld2-edit-query-field-component")].map(e => e.getSpec()),
+      fields: [...this.shadowRoot.getElementById("fields").querySelectorAll("ld2-edit-query-field-component")].map(e => e.getSpec()).filter(spec => !!spec),
       groupBy: (this.shadowRoot.getElementById("groupfields").getValue() || this.shadowRoot.getElementById("groupfields").getValue()) ? {
         fields: this.shadowRoot.getElementById("groupfields").getValue() ? this.shadowRoot.getElementById("groupfields").getValue().split(",").map(f => f.trim()) : undefined,
         sum: this.shadowRoot.getElementById("sumfields").getValue() ? this.shadowRoot.getElementById("sumfields").getValue().split(",").map(f => f.trim()) : undefined,
