@@ -248,7 +248,7 @@ class Element extends HTMLElement {
       this.shadowRoot.getElementById("edit-raw-container").classList.toggle("hidden", true)
       return;
     }
-    this.shadowRoot.getElementById("spec").value = this.getCurSpec()
+    this.shadowRoot.getElementById("spec").value = JSON.stringify(JSON.parse(this.getCurSpec()), null, 2);
 
     this.hideEditors();
     this.shadowRoot.getElementById("edit-raw-container").classList.toggle("hidden", false)
@@ -283,7 +283,7 @@ class Element extends HTMLElement {
   async saveSpec(){
     let spec = this.getCurSpec()
     try{
-      JSON.parse(spec)
+      spec = JSON.stringify(JSON.parse(spec))
     } catch(err){
       await alertDialog("Query spec is not valid JSON")
       return;

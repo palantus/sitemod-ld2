@@ -32,7 +32,15 @@ export default class Query extends Entity {
   patch(obj, user){
     if(typeof obj.title === "string" && obj.title) this.title = obj.title;
     if(typeof obj.description === "string") this.description = obj.description;
-    if(typeof obj.spec === "string") this.spec = obj.spec;
+    if(typeof obj.spec === "string") {
+      try{
+        JSON.parse(obj.spec)
+      } catch(err){
+        throw "Invalid JSON"
+      }
+      if(obj.spec.length > 50000) throw "Spec is too large. Can't support more than 50.000 characters";
+      this.spec = obj.spec;
+    }
     if(typeof obj.common === "boolean" && user.hasPermission("ld2.query.admin")) this.common = obj.common;
   }
 
