@@ -116,7 +116,7 @@ export default class LD2Reader{
       case "date":
         let daysDiff = dataView.getInt32(pos);
         if(daysDiff > 0)
-          return moment("1900-01-01").add(daysDiff, "days").format("YYYYMMDD")
+          return moment("1900-01-01").add(daysDiff, "days").format("YYYY-MM-DD")
         break;
 
       case "datetime":
