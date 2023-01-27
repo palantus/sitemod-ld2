@@ -81,7 +81,7 @@ template.innerHTML = `
   <div id="container">
     <h1>Inspect LD2 file</h1>
     <div id="controls">
-      <input type="file" id="fileinput" />
+      <input type="file" id="fileinput" multiple />
     </div>
     <ld2-queries-component id="query-component" class="hidden"></ld2-queries-component>
     <div id="file-content" class="hidden">
@@ -121,7 +121,7 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-    this.readSingleFile = this.readSingleFile.bind(this)
+    this.filesSelected = this.filesSelected.bind(this)
     this.queryData = this.queryData.bind(this)
     this.tableClicked = this.tableClicked.bind(this)
     this.exportTableCSV = this.exportTableCSV.bind(this)
@@ -129,7 +129,7 @@ class Element extends HTMLElement {
     this.reader = null;
     this.curTable = null;
 
-    this.shadowRoot.getElementById('fileinput').addEventListener('change', this.readSingleFile, false);
+    this.shadowRoot.getElementById('fileinput').addEventListener('change', this.filesSelected, false);
     this.shadowRoot.getElementById("query-btn").addEventListener("click", this.queryData)
     this.shadowRoot.querySelector("#fileoverviewtab tbody").addEventListener("click", this.tableClicked)
     this.shadowRoot.getElementById("export-table-csv-btn").addEventListener("click", this.exportTableCSV)
@@ -169,9 +169,13 @@ class Element extends HTMLElement {
     let ext = fileMeta.name.split(".").pop();
     let response = await api.fetch(`file/download/${fileHash}`)
     let data = ext == "ld2" ? await response.blob() : await response.text();
-    this.onFile({target: {result: data}}, fileMeta.name, "." + ext)
+    
+    if(this.reader) this.reader.reset();
+    else this.reader = new LD2Reader();
+    await this.reader.read(data, fileMeta.name, "."+ext);
 
     this.shadowRoot.getElementById("downloadFile").addEventListener("click", () => window.open(fileMeta.links.download, '_blank'))
+    this.refreshTableList();
   }
 
   async loadFileFromId(id){
@@ -185,66 +189,56 @@ class Element extends HTMLElement {
     let ext = fileMeta.name.split(".").pop();
     let response = await api.fetch(`file/download/${id}`)
     let data = ext == "ld2" ? await response.blob() : await response.text();
-    this.onFile({target: {result: data}}, fileMeta.name, "." + ext)
+
+    if(this.reader) this.reader.reset();
+    else this.reader = new LD2Reader();
+    await this.reader.read(data, fileMeta.name, "."+ext);
 
     this.shadowRoot.getElementById("downloadFile").addEventListener("click", () => window.open(fileMeta.links.download, '_blank'))
+    this.refreshTableList();
   }
   
-  readSingleFile(evt) {
-    //Retrieve the first (and only!) File from the FileList object
-    var f = evt.target.files[0];
+  async filesSelected(evt) {
+    if (!evt.target.files[0]) {
+      alertDialog("Failed to load file");
+      return;
+    }
 
-    if (f) {
+    pushStateQuery(undefined)
+    this.shadowRoot.getElementById('downloadFile').style.display = "none"
+
+    if(this.reader) this.reader.reset();
+    else this.reader = new LD2Reader();
+
+    for(let f of evt.target.files){
       let ext = f.name.substring(f.name.lastIndexOf('.'))
 
-      let r = new FileReader();
-      r.onload = (e) => this.onFile(e, f.name, ext);
-
-      pushStateQuery(undefined)
-      this.shadowRoot.getElementById('downloadFile').style.display = "none"
-
-      switch(ext.toLowerCase()){
-        case ".ld2":
-            r.readAsArrayBuffer(f);
-            break;
-        case ".ld":
-        case ".xpo":
-            r.readAsText(f, 'ISO-8859-1');
-            break;
-        default:
-          alertDialog(`Unknown file extension ${ext}`)
-          return;
+      if(ext.toLowerCase() != ".ld2"){
+        alertDialog(`Unknown file extension ${ext}`)
+        continue;
       }
 
-    } else {
-      alertDialog("Failed to load file");
+      await new Promise(resolve => {
+        let r = new FileReader();
+        r.onload = async (e) => {
+          await this.reader.read(e.target.result);
+          resolve();
+        };
+        r.readAsArrayBuffer(f);
+      })
     }
+
+    this.refreshTableList();
   }
 
-  async onFile(e, filename, ext){
-    let buffer = e.target.result;
-    switch(ext.toLowerCase()){
-      case ".ld2":
-          this.reader = new LD2Reader(buffer);
-          break;
-      default:
-        alertDialog(`Unknown file extension ${ext}`)
-        return;
-    }
-  
-    await this.reader.read();
-  
-    this.shadowRoot.querySelector("#fileoverviewtab tbody").innerHTML = '';
-  
+  refreshTableList(){
     this.shadowRoot.getElementById("header").innerHTML = `File format: <span>${this.reader.header.formatversion || "N/A"}</span>, AX version: <span>${this.reader.header.axversion || "N/A"}</span>, Exported at: <span>${this.reader.header.date ? moment(this.reader.header.date + " " + this.reader.header.time).format("D. MMM YYYY HH:mm:ss") : "N/A"}</span>`
   
-    let tables = this.reader.getTableNamesAsArray();
-    for(let tableName of tables){
-      let tab = this.reader.tables[tableName];
-      let row = `<tr><td class="tabname">${tableName}</td><td>${tab.recordCount}</td></tr>`;
-      //row.click(function(){tableClicked($(this).find(".tabname").text())})
-      this.shadowRoot.querySelector("#fileoverviewtab tbody").innerHTML += row;
-    }
+    this.shadowRoot.querySelector("#fileoverviewtab tbody").innerHTML = this.reader.getTableNamesAsArray().map(tableName => `
+      <tr>
+        <td class="tabname">${tableName}</td>
+        <td>${this.reader.tables[tableName].recordCount}</td>
+      </tr>`).join("")
 
     this.shadowRoot.getElementById("file-content").classList.toggle("hidden", false)
   }

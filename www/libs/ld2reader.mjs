@@ -2,10 +2,9 @@ import moment from "/libs/moment.js"
 import "/libs/jszip.min.js"
 
 export default class LD2Reader{
-  constructor(buffer, _jszip){
-    this.buffer = buffer;
-    this.tables = {};
-    this.header = {}
+  files = [];
+
+  constructor(_jszip){
 
     if(_jszip && "undefined" === typeof JSZip){
       this.JSZip = _jszip
@@ -15,72 +14,99 @@ export default class LD2Reader{
     this.nextRecId = 1;
   }
 
-  async loadZip(){
-    this.zip = await this.JSZip.loadAsync(this.buffer);
+  async loadZip(buffer){
+    let zip = await this.JSZip.loadAsync(buffer);
+
+    let data = await zip.file("metadata").async("arraybuffer");
+    let dataView = new DataView(data);
+
+    let tableHeaderSize = dataView.getInt32(0);
+
+    let headerRaw = this.byteArray2str(new Uint8Array(data.slice(4, 4+tableHeaderSize)));
+    let headerSplit = headerRaw.split(";");
+
+    let header = {}
+
+    for(let h of headerSplit){
+      let vSplit = h.split("=");
+      header[vSplit[0]] = vSplit[1];
+    }
+
+    header.tables = header.tables.split(",")
+
+    let tables = {}
+    for(let tabLine of header.tables){
+      let tabSplit = tabLine.split("*")
+      tables[tabSplit[0]] = {name: tabSplit[0], recordCount: parseInt(tabSplit[1])}
+    }
+
+    this.files.push({id: this.files.length, zip, header, tables});
   }
 
-  async readMetaFile(){
-      let data = await this.zip.file("metadata").async("arraybuffer");
-      let dataView = new DataView(data);
-
-      let tableHeaderSize = dataView.getInt32(0);
-
-      let headerRaw = this.byteArray2str(new Uint8Array(data.slice(4, 4+tableHeaderSize)));
-      let headerSplit = headerRaw.split(";");
-
-      this.header = {}
-
-      for(let h of headerSplit){
-        let vSplit = h.split("=");
-        this.header[vSplit[0]] = vSplit[1];
+  get tables(){
+    let ret = {}
+    for(let file of this.files){
+      for(let tabName of Object.keys(file.tables)){
+        if(ret[tabName] === undefined){
+          ret[tabName] = JSON.parse(JSON.stringify(file.tables[tabName]));
+          continue;
+        }
+        
+        ret[tabName].recordCount += file.tables[tabName].recordCount
       }
+    }
+    return ret;
+  }
 
-      this.header.tables = this.header.tables.split(",")
-
-      for(let tabLine of this.header.tables){
-        let tabSplit = tabLine.split("*")
-        this.tables[tabSplit[0]] = {name: tabSplit[0], recordCount: parseInt(tabSplit[1])}
-      }
+  get header(){
+    return this.files[0]?.header
   }
 
   async getRecord(tableName, idx){
-    let records = await this.getRecordsInRange(tableName, idx, 1);
-    return records[0] || null
+    return (await this.getRecordsInRange(tableName, idx, 1))[0] || null;
   }
 
   async getRecordsInRange(tableName, offset, num){
     if(!this.tables[tableName]) return [];
     await this.fillTableMetadata(tableName);
-    let meta = this.tables[tableName];
-
-    let data = await this.zip.file(tableName).async("arraybuffer");
-    let dataView = new DataView(data);
     let records = [];
 
-    for(let i = offset; i < Math.min(meta.recordCount, offset+num); i++){
-      let record = {};
+    for(let file of this.files){
+      let meta = file.tables[tableName];
+      if(!meta) continue;
 
-      let pos = meta.dataPosition + meta.recordPositions[i];
+      let data = await file.zip.file(tableName).async("arraybuffer");
+      let dataView = new DataView(data);
 
-      for(let f = 0; f < meta.fields.length; f++){
-        let fieldSize = dataView.getInt32(pos);
-        pos += 4;
+      let recordsAdded = 0;
+      for(let i = offset; i < Math.min(meta.recordCount, offset+num); i++){
+        let record = {};
 
-        if(fieldSize == 0){
-          record[meta.fields[f].name] = null;
-          continue;
+        let pos = meta.dataPosition + meta.recordPositions[i];
+
+        for(let f = 0; f < meta.fields.length; f++){
+          let fieldSize = dataView.getInt32(pos);
+          pos += 4;
+
+          if(fieldSize == 0){
+            record[meta.fields[f].name] = null;
+            continue;
+          }
+
+          record[meta.fields[f].name] = this.parseValue(dataView, data, pos, fieldSize, meta.fields[f].type)
+
+          pos += fieldSize;
         }
 
-        record[meta.fields[f].name] = this.parseValue(dataView, data, pos, fieldSize, meta.fields[f].type)
+        if(!record.RecId){
+          record.RecId = this.nextRecId++;
+        }
 
-        pos += fieldSize;
+        records.push(record);
+        recordsAdded++;
       }
-
-      if(!record.RecId){
-        record.RecId = this.nextRecId++;
-      }
-
-      records.push(record);
+      num -= recordsAdded;
+      offset = Math.max(offset - meta.recordCount, 0);
     }
 
     return records
@@ -146,40 +172,46 @@ export default class LD2Reader{
   }
 
   async fillTableMetadata(tableName){
-    if(!this.tables[tableName]) 
-      return;
+    for(let file of this.files){
+      if(!file.tables[tableName]) 
+        continue;
 
-    if(this.tables[tableName].dataPosition !== undefined)
-      return;
+      if(file.tables[tableName].dataPosition !== undefined)
+        continue;
 
-    let data = await this.zip.file(tableName).async("arraybuffer");
-    let dataView = new DataView(data);
+      let data = await file.zip.file(tableName).async("arraybuffer");
+      let dataView = new DataView(data);
 
-    let tableHeaderSize = dataView.getInt32(0);
+      let tableHeaderSize = dataView.getInt32(0);
 
-    let header = this.byteArray2str(new Uint8Array(data.slice(4, 4+tableHeaderSize)));
-    let headerSplit = header.split(";");
-    let fieldsLine = headerSplit[1].split(",");
-    let fields = [];
-    for(let fieldStr of fieldsLine){
-      let fieldSplit = fieldStr.split(":");
-      fields.push({name: fieldSplit[0], type: fieldSplit[1]})
+      let header = this.byteArray2str(new Uint8Array(data.slice(4, 4+tableHeaderSize)));
+      let headerSplit = header.split(";");
+      let fieldsLine = headerSplit[1].split(",");
+      let fields = [];
+      for(let fieldStr of fieldsLine){
+        let fieldSplit = fieldStr.split(":");
+        fields.push({name: fieldSplit[0], type: fieldSplit[1]})
+      }
+
+      let dataPosition = 4 + tableHeaderSize;
+      let numRecords = parseInt(headerSplit[2]);
+      let recordPositions = []
+      for(let i = 0; i < numRecords; i++){
+        recordPositions.push(dataView.getInt32(dataPosition));
+        dataPosition += 4;
+      }
+
+      file.tables[tableName] = {name: tableName, fields, recordCount: numRecords, dataPosition: dataPosition, recordPositions: recordPositions}
     }
-
-    let dataPosition = 4 + tableHeaderSize;
-    let numRecords = parseInt(headerSplit[2]);
-    let recordPositions = []
-    for(let i = 0; i < numRecords; i++){
-      recordPositions.push(dataView.getInt32(dataPosition));
-      dataPosition += 4;
-    }
-
-    this.tables[tableName] = {name: tableName, fields: fields, recordCount: numRecords, dataPosition: dataPosition, recordPositions: recordPositions}
   }
 
-  async read(){
-    await this.loadZip();
-    await this.readMetaFile();
+  async read(buffer){
+    await this.loadZip(buffer);
+  }
+
+  reset(){
+    this.files = []
+    this.nextRecId = 1;
   }
 
   getTableNamesAsArray(){
