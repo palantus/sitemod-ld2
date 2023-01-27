@@ -58,21 +58,21 @@ template.innerHTML = `
       <h3>Select an existing query or create a new</h3>
       <div id="existing-container">
         <div>
-          <h4>Mine</h4>
+          <h4 title="Queries that you have created and only you can see">Mine</h4>
           <table>
             <tbody id="mine">
             </tbody>
           </table>
         </div>
         <div>
-          <h4>Common</h4>
+          <h4 title="Queries that an administrator has decided to show for all users">Common</h4>
           <table>
             <tbody id="common">
             </tbody>
           </table>
         </div>
         <div>
-          <h4>Shared</h4>
+          <h4 title="Queries that other users has shared with you">Shared</h4>
           <table>
             <tbody id="shared">
             </tbody>
