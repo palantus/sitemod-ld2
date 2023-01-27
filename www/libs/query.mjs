@@ -5,6 +5,9 @@ export class Query{
   constructor(spec, cache){
     this.cache = cache;
 
+    if(!spec.dataSources || spec.dataSources.length < 1) 
+      throw "Queries must have at least one datasource"
+
     for(let dsSpec of spec.dataSources){
       let ds = new DataSource(dsSpec)
       this.dataSources.push(ds)

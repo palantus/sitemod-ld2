@@ -134,7 +134,7 @@ class Element extends HTMLElement {
     let queries = await api.get("ld2/query");
     ["mine", "shared", "common"].forEach(cat => {
       this.shadowRoot.getElementById(cat).innerHTML = queries.filter(e => e.category == cat).sort((a, b) => a.title.toLowerCase() < b.title.toLowerCase() ? -1 : 1).map(e => `
-        <tr data-id="${e.id}" class="query">
+        <tr data-id="${e.id}" class="query" title="Made by ${e.owner?.name||"N/A"} (${e.owner?.id||"N/A"})">
           <td>${e.title}</td>
         </tr>
       `).join("")
