@@ -5,12 +5,14 @@ import "/components/action-bar.mjs"
 import "/components/action-bar-item.mjs"
 import "/components/tablebrowser.mjs"
 import "/components/ld2-queries.mjs"
+import "/components/field.mjs"
 import api from "/system/api.mjs"
 import {state, pushStateQuery, setPageTitle} from "/system/core.mjs"
 import {on, off} from "/system/events.mjs"
-import { alertDialog } from "/components/dialog.mjs"
+import { alertDialog, showDialog } from "/components/dialog.mjs"
 import {saveFileCSV} from "/libs/file.mjs"
 import {userPermissions} from "/system/user.mjs"
+import { makeRowsSelectable } from "/libs/table-tools.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -76,10 +78,11 @@ template.innerHTML = `
     #left{overflow-y: auto; width: 400px;}
     #right{overflow: auto; padding-left: 10px; max-width: calc(100% - 400px);}
     #rightheader{margin-bottom: 10px;}
+    #new-file-tables td:first-child{max-width: 25px;}
   </style>
 
   <div id="container">
-    <h1>Inspect LD2 file</h1>
+    <h1>Inspect ld2 file</h1>
     <div id="controls">
       <input type="file" id="fileinput" multiple />
     </div>
@@ -87,6 +90,7 @@ template.innerHTML = `
     <div id="file-content" class="hidden">
       <div id="header"></div>
       <button id="query-btn" class="styled hidden">Query data</button>
+      <button id="save-new-file-btn" class="styled">Generate new ld2</button>
       <button id="downloadFile" class="styled hidden">Download</button>
       <div id="flex">
         <div id="left">
@@ -112,6 +116,18 @@ template.innerHTML = `
       </div>
     </div>
   </div>
+  
+  <dialog-component title="Generate new ld2 file" id="save-file-dialog">
+    <field-component label="Filename"><input id="new-filename"></input></field-component>
+    <p id="multi-file-note" class="hidden">WARNING: You have combined data from multiple files. If a given table exists in multiple files, only the data from the first file is exported.</p>
+    <button id="save-select-all" class="styled">Select all</button>
+    <button id="save-select-none" class="styled">Select none</button>
+    <br><br>
+    <table>
+      <tbody id="new-file-tables">
+      </tbody>
+    </table>
+  </dialog-component>
 `;
 
 class Element extends HTMLElement {
@@ -125,6 +141,7 @@ class Element extends HTMLElement {
     this.queryData = this.queryData.bind(this)
     this.tableClicked = this.tableClicked.bind(this)
     this.exportTableCSV = this.exportTableCSV.bind(this)
+    this.saveNewFile = this.saveNewFile.bind(this)
 
     this.reader = null;
     this.curTable = null;
@@ -138,6 +155,10 @@ class Element extends HTMLElement {
       this.shadowRoot.getElementById("file-content").classList.toggle("hidden", false)
       this.shadowRoot.getElementById("controls").classList.toggle("hidden", false)
     })
+    this.shadowRoot.getElementById("save-new-file-btn").addEventListener("click", this.saveNewFile)
+    this.shadowRoot.getElementById("save-select-all").addEventListener("click", () => this.shadowRoot.getElementById("new-file-tables").parentElement.selectionTool?.selectAll())
+    this.shadowRoot.getElementById("save-select-none").addEventListener("click", () => this.shadowRoot.getElementById("new-file-tables").parentElement.selectionTool?.clear())
+
     userPermissions().then(permissions => {
       if(permissions.includes("ld2.query.read")){
         this.shadowRoot.getElementById("query-btn").classList.remove("hidden")
@@ -286,6 +307,37 @@ class Element extends HTMLElement {
     let component = this.shadowRoot.getElementById("query-component")
     await component.init(this.reader)
     component.classList.toggle("hidden", false)
+  }
+
+  async saveNewFile(){
+    let dialog = this.shadowRoot.getElementById("save-file-dialog")
+    this.shadowRoot.getElementById("new-file-tables").innerHTML = this.reader.getTableNamesAsArray().map(tableName => `
+      <tr>
+        <td class="tabname">${tableName}</td>
+      </tr>`).join("")
+
+    let tab = this.shadowRoot.getElementById("new-file-tables").parentElement
+    tab.selectionTool = makeRowsSelectable(tab);
+
+    this.shadowRoot.getElementById("multi-file-note").classList.toggle("hidden", this.reader.files.length <= 1)
+    
+    showDialog(dialog, {
+      show: () => this.shadowRoot.querySelector("#new-filename").focus(),
+      ok: async (val) => {
+        this.reader.saveToNewFile(val.tables, val.filename)
+      },
+      validate: (val) => 
+          val.tables.length < 1 ? "Please select at least one table"
+        : !val.filename ? "Filename not specified"
+        : true,
+      values: () => {return {
+        tables: tab.selectionTool.getSelected().map(tr => tr.querySelector("td:last-child").innerText),
+        filename: this.shadowRoot.getElementById("new-filename").value
+      }},
+      close: () => {
+        this.shadowRoot.getElementById("new-file-tables").innerHTML = ''
+      }
+    })
   }
 
   connectedCallback() {

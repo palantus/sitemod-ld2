@@ -1,5 +1,6 @@
 import moment from "/libs/moment.js"
 import "/libs/jszip.min.js"
+import {saveFileBlob} from "/libs/file.mjs"
 
 export default class LD2Reader{
   files = [];
@@ -212,6 +213,35 @@ export default class LD2Reader{
   reset(){
     this.files = []
     this.nextRecId = 1;
+  }
+
+  async saveToNewFile(parmTableNames, filename){
+    let tableNames = parmTableNames || this.getTableNamesAsArray()
+
+    let zip = new this.JSZip();
+    let tableHeaders = []
+    for(let tableName of tableNames){
+      let file = this.files.find(f => !!f.tables[tableName])
+      if(!file) continue;
+      zip.file(tableName, await file.zip.file(tableName).async("arraybuffer"))
+
+      tableHeaders.push({name: tableName, recordCount: file.tables[tableName].recordCount})
+    }
+
+    let saveFilename = filename || `Export.ld2`
+    if(!saveFilename.endsWith(".ld2")) saveFilename += ".ld2"
+
+    let tableHeaderString = tableHeaders.map(header => `${header.name}*${header.recordCount}`).join(",")
+    let metadataString = `formatversion=1.0;axversion=7;date=${moment().format("YYYY-MM-DD")};time=${moment().format("HH:mm:ss")};filename=${saveFilename.replace(";", ":")};tables=${tableHeaderString}`
+    let metadataLengthBytes = new TextEncoder().encode(metadataString).length
+    let byteArray = new TextEncoder().encode("    " + metadataString); // Add space for 32-bit integer telling the number of bytes
+    let dataView = new DataView(byteArray.buffer)
+    dataView.setInt32(0, metadataLengthBytes, false);
+
+    zip.file("metadata", byteArray)
+
+    let blob = await zip.generateAsync({type: "blob"})
+    saveFileBlob(blob, saveFilename)
   }
 
   getTableNamesAsArray(){
