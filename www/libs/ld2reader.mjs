@@ -232,7 +232,7 @@ export default class LD2Reader{
     if(!saveFilename.endsWith(".ld2")) saveFilename += ".ld2"
 
     let tableHeaderString = tableHeaders.map(header => `${header.name}*${header.recordCount}`).join(",")
-    let metadataString = `formatversion=1.0;axversion=7;date=${moment().format("YYYY-MM-DD")};time=${moment().format("HH:mm:ss")};filename=${saveFilename.replace(";", ":")};tables=${tableHeaderString}`
+    let metadataString = `formatversion=1.0;axversion=${this.header.axversion};date=${moment().format("YYYY-MM-DD")};time=${moment().format("HH:mm:ss")};filename=${saveFilename.replace(";", ":")};tables=${tableHeaderString}`
     let metadataLengthBytes = new TextEncoder().encode(metadataString).length
     let byteArray = new TextEncoder().encode("    " + metadataString); // Add space for 32-bit integer telling the number of bytes
     let dataView = new DataView(byteArray.buffer)
