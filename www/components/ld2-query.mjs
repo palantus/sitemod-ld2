@@ -191,6 +191,8 @@ class Element extends HTMLElement {
   async runCSV(){
     let spec = this.getCurSpec()
     if(!spec) return;
+    this.hideEditors();
+    this.shadowRoot.getElementById("result").classList.add("hidden")
     try{
       this.initLog();
       let result = await runQuery(this.reader, JSON.parse(spec), this.log)
