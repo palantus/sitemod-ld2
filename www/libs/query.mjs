@@ -192,6 +192,9 @@ class DataSourceField{
       case "first":
         record[this.name] = remoteRecords[0]?.[this.field] || null
         break;
+      case "last":
+        record[this.name] = remoteRecords[remoteRecords.length - 1]?.[this.field] || null
+        break;
       case "sum":
         record[this.name] = remoteRecords.reduce((sum, cur) => sum + (cur[this.field]||0), 0)||0;
         break;

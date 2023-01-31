@@ -41,6 +41,7 @@ template.innerHTML = `
           <option value="sum">Sum of all records</option>
           <option value="count">Record count</option>
           <option value="first">First record</option>
+          <option value="last">Last record</option>
         </field-edit>
       where
 
