@@ -2,6 +2,7 @@ let elementName = "ld2-edit-query-ds-component"
 
 import "/components/ld2-edit/field.mjs"
 import "/components/ld2-edit/aggregate.mjs"
+import "/components/ld2-edit/group.mjs"
 import "/components/field-edit.mjs"
 import "/components/field-list.mjs"
 
@@ -41,7 +42,10 @@ template.innerHTML = `
       </div>
       <button id="add-field" class="styled">Add field</button>
       <br>
-      Group by <field-edit type="text" label="Fields" id="groupfields" title="Enter comma-separated list of fields to group by"></field-edit>.
+      Group by 
+      <span id="groups"></span>.
+      <button id="add-group" class="styled">Add group</button>
+
       <span id="aggregate-container">
         <br>
         Aggregate
@@ -87,6 +91,7 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("add-field").addEventListener("click", () => this.addField({}));
     this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}));
     this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}));
+    this.shadowRoot.getElementById("add-group").addEventListener("click", () => this.addGroup({}));
     this.shadowRoot.getElementById("add-aggregate").addEventListener("click", () => this.addAggregate({}));
 
     this.shadowRoot.getElementById("table").addEventListener("value-changed", this.storeAndRefreshUI);
@@ -101,33 +106,34 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("join-type").addEventListener("value-changed", () => {
       this.shadowRoot.getElementById("join-container").classList.toggle("hidden", !!!this.shadowRoot.getElementById("join-type").getValue())
     })
-
-    this.shadowRoot.getElementById("groupfields").addEventListener("value-changed", () => {
-      this.shadowRoot.getElementById("aggregate-container").classList.toggle("hidden", !!!this.shadowRoot.getElementById("groupfields").getValue())
-    })
   }
 
   refreshUI(){
+
+    let columns = [...this.spec.fields||[], ...this.spec.groupBy?.fields||[], ...this.spec.groupBy?.aggregate||[]]
+
     this.shadowRoot.getElementById("summary-text").innerHTML = `
       This data source fetches data from <span class="highlight">${this.spec.table}</span>.<br>
-      The output consists of the following columns: ${(this.spec.fields||[]).map(f => `<span class="highlight">${f.name||f.field}</span>`).join(", ")}.
+      The output consists of the following columns: ${columns.map(f => `<span class="highlight">${f.name||f.field}</span>`).join(", ")}.
       `
 
     this.shadowRoot.getElementById("fields").innerHTML = ""
     this.shadowRoot.getElementById("wheres").innerHTML = ""
     this.shadowRoot.getElementById("join-ons").innerHTML = ""
-    this.shadowRoot.getElementById("aggregates").innerHTML = ""
+    this.shadowRoot.getElementById("aggregates").innerHTML = "none"
+    this.shadowRoot.getElementById("groups").innerHTML = "none"
 
     this.shadowRoot.getElementById("header-title").innerText = this.spec.name||"N/A"
     this.shadowRoot.getElementById("name").setAttribute("value", this.spec.name||"");
     this.shadowRoot.getElementById("table").setAttribute("value", this.spec.table||"");
     this.spec.fields?.forEach(spec => this.addField(spec))
-    this.shadowRoot.getElementById("groupfields").setAttribute("value", this.spec.groupBy?.fields?.join(", ")||"");
     this.spec.where?.forEach(spec => this.addWhere(spec))
     this.shadowRoot.getElementById("join-type").setAttribute("value", this.spec.join?.type||"");
     this.shadowRoot.getElementById("join-ds").setAttribute("value", this.spec.join?.ds||"");
     this.spec.join?.on?.forEach(spec => this.addOn(spec))
     this.spec.groupBy?.aggregate?.forEach(spec => this.addAggregate(spec))
+    this.spec.groupBy?.sum?.forEach(field => this.addAggregate({field, name: field, type: "sum"}))
+    this.spec.groupBy?.fields?.forEach(spec => this.addGroup(spec))
     this.shadowRoot.getElementById("join-container").classList.toggle("hidden", !!!this.spec.join?.type)
     this.shadowRoot.getElementById("aggregate-container").classList.toggle("hidden", !!!(this.spec.groupBy?.fields?.length > 0))
   }
@@ -156,12 +162,27 @@ class Element extends HTMLElement {
   }
 
   addAggregate(spec){
-    if(this.shadowRoot.getElementById("aggregates").childNodes.length > 0){
+    if(this.shadowRoot.getElementById("aggregates").querySelectorAll("ld2-edit-query-aggregate-component").length > 0){
       this.shadowRoot.getElementById("aggregates").appendChild(document.createTextNode(" and "));
+    } else {
+      this.shadowRoot.getElementById("aggregates").innerHTML = "";
     }
     let aggregate = document.createElement("ld2-edit-query-aggregate-component")
     aggregate.setSpec(spec)
     this.shadowRoot.getElementById("aggregates").appendChild(aggregate);
+  }
+
+  addGroup(_spec){
+    let spec = typeof _spec === "string" ? {name: _spec, field: _spec} : _spec
+    if(this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component").length > 0){
+      this.shadowRoot.getElementById("groups").appendChild(document.createTextNode(" and "));
+    } else {
+      this.shadowRoot.getElementById("groups").innerHTML = "";
+    }
+    let group = document.createElement("ld2-edit-query-group-component")
+    group.setSpec(spec)
+    this.shadowRoot.getElementById("groups").appendChild(group);
+    this.shadowRoot.getElementById("aggregate-container").classList.toggle("hidden", false);
   }
 
   setSpec(spec){
@@ -174,8 +195,10 @@ class Element extends HTMLElement {
       name: this.shadowRoot.getElementById("name").getValue(),
       table: this.shadowRoot.getElementById("table").getValue(),
       fields: [...this.shadowRoot.getElementById("fields").querySelectorAll("ld2-edit-query-field-component")].map(e => e.getSpec()).filter(spec => !!spec),
-      groupBy: (this.shadowRoot.getElementById("groupfields").getValue() || this.shadowRoot.getElementById("groupfields").getValue()) ? {
-        fields: this.shadowRoot.getElementById("groupfields").getValue() ? this.shadowRoot.getElementById("groupfields").getValue().split(",").map(f => f.trim()) : undefined,
+      groupBy: (this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component").length > 0) ? {
+        fields: this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component").length > 0
+                ? [...this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component")].map(e => e.getSpec()).filter(spec => !!spec) 
+                : undefined,
         aggregate: this.shadowRoot.getElementById("aggregates").querySelectorAll("ld2-edit-query-aggregate-component").length > 0
                    ? [...this.shadowRoot.getElementById("aggregates").querySelectorAll("ld2-edit-query-aggregate-component")].map(e => e.getSpec()).filter(spec => !!spec) 
                    : undefined,

@@ -17,7 +17,6 @@ template.innerHTML = `
     in <u>this</u> data source must be equal to 
       <field-edit type="text" label="Remote field" id="remote"></field-edit>
     in the <u>other</u>
-    
   </span>
 `;
 

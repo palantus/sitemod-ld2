@@ -107,7 +107,14 @@ class DataSource{
     if(spec.groupBy){
       this.groupBy = new DataSourceGroupBy(spec.groupBy);
 
-      // Add aggregates automatically
+      // Add fields automatically
+      for(let g of spec.groupBy.fields||[]){
+        if(this.fields.find(f => f.name == (g.name||g.field))) continue;
+        let field = new DataSourceField({field: g.name||g.field});
+        this.fields.push(field)
+      }
+
+      // Add fields from aggregates automatically
       for(let agg of spec.groupBy.aggregate||[]){
         if(this.fields.find(f => f.name == (agg.name||agg.field))) continue;
         let field = new DataSourceField({field: agg.name||agg.field});
@@ -277,14 +284,14 @@ class DataSourceGroupBy{
   run(records){
     let groups = new Map()
     for(let record of records){
-      let key = this.fields.map(f => record[f]).join("--");
+      let key = this.fields.map(f => record[f.field]).join("--");
       let group;
       if(groups.has(key)){
         group = groups.get(key);
       } else {
         group = {}
         for(let f of this.fields){
-          group[f] = record[f]
+          group[f.name||f.field] = record[f.field]
         }
         groups.set(key, group)
       }
