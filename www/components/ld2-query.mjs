@@ -174,62 +174,61 @@ class Element extends HTMLElement {
   async setReader(reader){
     this.reader = reader;
     this.curSpec = null;
+    this.cachedResult = null;
+    this.lastRunQuery = null;
   }
 
   async runAndShow(){
+    let result = await this.runQuery()
+    this.shadowRoot.getElementById("result").classList.add("hidden")
+    let fields = [...Object.keys(result[0])]
+    this.shadowRoot.querySelector("#result thead").innerHTML = fields.map(f => `<th class="${typeof result[0][f]}">${f}</th>`).join("")
+    this.shadowRoot.querySelector("#result tbody").innerHTML = result.map(r => `
+        <tr class="result">${fields.map(f => `<td class="${typeof r[f]}">${valueToString(r[f])}</td>`).join("")}</tr>
+      `).join("")
+    this.shadowRoot.getElementById("result").classList.remove("hidden")
+  }
+
+  async runCSV(){
+    let result = await this.runQuery()
+    this.shadowRoot.getElementById("result").classList.add("hidden")
+      
+    let fields = [...Object.keys(result[0])]
+    let header = fields.join(";")
+
+    result = result.map(r => {
+      let row = []
+      for(let f of fields){
+        let displayValue = (r[f] === undefined || r[f] === null) ? ""
+                        : typeof r[f] === "number" ? r[f].toFixed(2)
+                        : Array.isArray(r[f]) ? JSON.stringify(r[f]) 
+                        : r[f];
+        row.push(displayValue)
+      }
+      return row.join(";")
+    })
+
+    await saveFileCSV([header, ...result], `${this.query.title}.csv`)
+  }
+
+  async runQuery(){
     let spec = this.getCurSpec()
     if(!spec) return;
     this.hideEditors();
-    this.shadowRoot.getElementById("result").classList.add("hidden")
     try{
       this.initLog();
-      let result = await runQuery(this.reader, JSON.parse(spec), this.log)
-      if(result.length < 1) return alertDialog("The query returned no data");
-
-      let fields = [...Object.keys(result[0])]
-      this.shadowRoot.querySelector("#result thead").innerHTML = fields.map(f => `<th class="${typeof result[0][f]}">${f}</th>`).join("")
-      this.shadowRoot.querySelector("#result tbody").innerHTML = result.map(r => `
-          <tr class="result">${fields.map(f => `<td class="${typeof r[f]}">${valueToString(r[f])}</td>`).join("")}</tr>
-        `).join("")
-      this.shadowRoot.getElementById("result").classList.remove("hidden")
-      this.removeLog();
+      let result = (this.cachedResult && this.lastRunQuery == spec) ? this.cachedResult
+                 : await runQuery(this.reader, JSON.parse(spec), this.log)
+      this.lastRunQuery = spec;
+      this.cachedResult = result;
+      if(result.length < 1) alertDialog("The query returned no data");
+      else this.removeLog();
+      return result;
     } catch(err){
       new Toast({text: `Error: ${err}`})
       this.log(`Error: ${err}`)
     }
-  }
-
-  async runCSV(){
-    let spec = this.getCurSpec()
-    if(!spec) return;
-    this.hideEditors();
-    this.shadowRoot.getElementById("result").classList.add("hidden")
-    try{
-      this.initLog();
-      let result = await runQuery(this.reader, JSON.parse(spec), this.log)
-      if(result.length < 1) return alertDialog("The query returned no data");
-      
-      let fields = [...Object.keys(result[0])]
-      let header = fields.join(";")
-
-      result = result.map(r => {
-        let row = []
-        for(let f of fields){
-          let displayValue = (r[f] === undefined || r[f] === null) ? ""
-                          : typeof r[f] === "number" ? r[f].toFixed(2)
-                          : Array.isArray(r[f]) ? JSON.stringify(r[f]) 
-                          : r[f];
-          row.push(displayValue)
-        }
-        return row.join(";")
-      })
-
-      await saveFileCSV([header, ...result], `${this.query.title}.csv`)
-      this.removeLog();
-    } catch(err){
-      new Toast({text: `Error: ${err}`})
-      this.log(`Error: ${terr}`)
-    }
+    return [];
   }
 
   log(text){
