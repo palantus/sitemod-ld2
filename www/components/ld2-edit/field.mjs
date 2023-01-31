@@ -33,7 +33,7 @@ template.innerHTML = `
     and name it <field-edit type="text" label="Name" id="name"></field-edit>
 
     <div id="remote-fields">
-      Use 
+      Use data source
         <field-edit type="text" label="Data source" id="ds"></field-edit>
       as the source and fetch 
         <field-edit type="select" label="Type" id="type">

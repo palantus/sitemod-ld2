@@ -14,9 +14,9 @@ template.innerHTML = `
   <span id="container">
     the field 
       <field-edit type="text" label="This field" id="this"></field-edit>
-    in this data source must be equal to 
+    in <u>this</u> data source must be equal to 
       <field-edit type="text" label="Remote field" id="remote"></field-edit>
-    in the other
+    in the <u>other</u>
     
   </span>
 `;
