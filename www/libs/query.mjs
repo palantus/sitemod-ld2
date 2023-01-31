@@ -94,12 +94,6 @@ class DataSource{
     this.name = spec.name;
     this.table = spec.table;
 
-    for(let fieldSpec of this.spec.fields||[]){
-      let field = new DataSourceField(fieldSpec);
-      this.fields.push(field)
-      if(fieldSpec.ds && fieldSpec.ds != this.name) this.dsDependencies.add(fieldSpec.ds);
-    }
-
     if(spec.where){
       this.conditions = new DataSourceConditions(spec.where);
     }
@@ -120,6 +114,13 @@ class DataSource{
         let field = new DataSourceField({field: agg.name||agg.field});
         this.fields.push(field)
       }
+    }
+
+    for(let fieldSpec of this.spec.fields||[]){
+      if(this.fields.find(f => f.name == (fieldSpec.name||fieldSpec.field))) continue;
+      let field = new DataSourceField(fieldSpec);
+      this.fields.push(field)
+      if(fieldSpec.ds && fieldSpec.ds != this.name) this.dsDependencies.add(fieldSpec.ds);
     }
 
     if(spec.join){
