@@ -34,9 +34,17 @@ template.innerHTML = `
     #result{margin-top: 10px;}
     #edit-raw-container,#edit-ui-container,#edit-info-container{margin-bottom: 30px;margin-top: 10px;}
     #log{margin-top: 15px;}
+    #title-container{position: relative;}
+    #unsaved{
+      color: red;
+      font-size: 0.7rem;
+      position: absolute;
+      margin-left: 10px;
+      top: 6px;
+    }
   </style>
   <div id="container">
-    <h2 id="title-header"></h2>
+    <h2 id="title-container"><span id="title-header"></span><span id="unsaved" class="hidden">draft - not saved!</span></h2>
     <div id="description-header"></div>
 
     <button id="run-and-show-btn" class="styled">Run and show</button>
@@ -138,6 +146,8 @@ class Element extends HTMLElement {
       this.shadowRoot.getElementById("edit-raw-btn").classList.toggle("hidden", !allowEdit)
       this.shadowRoot.getElementById("edit-ui-btn").classList.toggle("hidden", !allowEdit)
     })
+
+    this.curSpec = query.spec
   }
 
   hideEditors(){
@@ -163,6 +173,7 @@ class Element extends HTMLElement {
 
   async setReader(reader){
     this.reader = reader;
+    this.curSpec = null;
   }
 
   async runAndShow(){
@@ -273,13 +284,17 @@ class Element extends HTMLElement {
   }
 
   getCurSpec(){
+    let curSpec = null;
     if(!this.shadowRoot.getElementById("edit-raw-container").classList.contains("hidden")){
-      return this.shadowRoot.getElementById("spec").value || "{}"
+      curSpec = this.shadowRoot.getElementById("spec").value || "{}"
     } else if(!this.shadowRoot.getElementById("edit-ui-container").classList.contains("hidden")){
-      return JSON.stringify(this.shadowRoot.getElementById("query-ui").getSpec(), null, 2) || "{}"
+      curSpec = JSON.stringify(this.shadowRoot.getElementById("query-ui").getSpec(), null, 2) || "{}"
     } else {
-      return this.query.spec || "{}"
+      curSpec = this.curSpec || this.query.spec || "{}"
     }
+    this.curSpec = curSpec;
+    this.shadowRoot.getElementById("unsaved").classList.toggle("hidden", JSON.stringify(JSON.parse(this.query.spec)) == JSON.stringify(JSON.parse(this.curSpec)))
+    return curSpec;
   }
 
   async saveSpec(){

@@ -25,6 +25,7 @@ template.innerHTML = `
         <option value="fixed">A fixed value</option>
         <option value="fixed-not">Anything but</option>
         <option value="range">A range of values</option>
+        <option value="matches">A match (reg. exp.)</option>
       </field-edit>
     
     <span id="fixed-container" class="hidden">
@@ -49,7 +50,7 @@ class Element extends HTMLElement {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.shadowRoot.getElementById("type").addEventListener("value-changed", () => {
-      this.shadowRoot.getElementById("fixed-container").classList.toggle("hidden", this.shadowRoot.getElementById("type").getValue() != "fixed" && this.shadowRoot.getElementById("type").getValue() != "fixed-not")
+      this.shadowRoot.getElementById("fixed-container").classList.toggle("hidden", this.shadowRoot.getElementById("type").getValue() == "range")
       this.shadowRoot.getElementById("range-container").classList.toggle("hidden", this.shadowRoot.getElementById("type").getValue() != "range")
     })
   }
@@ -61,7 +62,7 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("from").setAttribute("value", this.spec.from||"")
     this.shadowRoot.getElementById("to").setAttribute("value", this.spec.to||"")
 
-    this.shadowRoot.getElementById("fixed-container").classList.toggle("hidden", this.spec.type != "fixed" && this.spec.type != "fixed-not")
+    this.shadowRoot.getElementById("fixed-container").classList.toggle("hidden", this.spec.type == "range")
     this.shadowRoot.getElementById("range-container").classList.toggle("hidden", this.spec.type != "range")
   }
 

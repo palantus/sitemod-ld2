@@ -268,6 +268,11 @@ class DataSourceCondition{
       case "fixed-not":
         if(this.spec.value == val) return false;
         break;
+      case "matches":
+        try{
+          return new RegExp(this.spec.value).test(val)
+        } catch(err){console.log(err)}
+        return false;
       default: 
         throw "Unsupported condition type: " + this.spec.type
     }
