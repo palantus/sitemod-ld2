@@ -106,6 +106,13 @@ class DataSource{
 
     if(spec.groupBy){
       this.groupBy = new DataSourceGroupBy(spec.groupBy);
+
+      // Add aggregates automatically
+      for(let agg of spec.groupBy.aggregate||[]){
+        if(this.fields.find(f => f.name == (agg.name||agg.field))) continue;
+        let field = new DataSourceField({field: agg.name||agg.field});
+        this.fields.push(field)
+      }
     }
 
     if(spec.join){
@@ -115,6 +122,13 @@ class DataSource{
   }
 
   init(query, records, metaFields){
+    if(this.fields.length < 1){
+      for(let metaField of metaFields){
+        let field = new DataSourceField({field: metaField.name});
+        this.fields.push(field)
+      }
+    }
+
     this.sourceRecords = records;
     this.metaFields = metaFields;
 
@@ -257,7 +271,7 @@ class DataSourceGroupBy{
   constructor(spec){
     this.spec = spec
     this.fields = spec.fields
-    this.sum = spec.sum||null
+    this.aggregate = spec.aggregate||null
   }
 
   run(records){
@@ -275,11 +289,24 @@ class DataSourceGroupBy{
         groups.set(key, group)
       }
       
-      if(this.sum){
-        for(let f of this.sum){
-          if(group[f] === undefined) group[f] = 0;
-          if(isNaN(record[f])) continue;
-          group[f] += record[f]
+      for(let agg of this.aggregate||[]){
+        let name = agg.name||agg.field
+        switch(agg.type){
+          case "sum":
+            if(group[name] === undefined) group[name] = 0;
+            if(isNaN(record[agg.field])) continue;
+            group[name] += record[agg.field]
+            break;
+          case "count":
+            if(group[name] === undefined) group[name] = 0;
+            group[name] += 1
+            break;
+          case "first":
+            if(group[name] === undefined) group[name] = record[agg.field];
+            break;
+          case "last":
+            group[name] = record[agg.field];
+            break;
         }
       }
     }

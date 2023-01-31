@@ -184,7 +184,7 @@ class Element extends HTMLElement {
       this.removeLog();
     } catch(err){
       new Toast({text: `Error: ${err}`})
-      this.log(`Error: ${terr}`)
+      this.log(`Error: ${err}`)
     }
   }
 
