@@ -270,7 +270,7 @@ class DataSourceCondition{
         break;
       case "matches":
         try{
-          return new RegExp(this.spec.value).test(val)
+          return new RegExp(this.spec.value).test(val === null ? "" : val)
         } catch(err){console.log(err)}
         return false;
       default: 
