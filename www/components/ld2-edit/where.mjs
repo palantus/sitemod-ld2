@@ -1,45 +1,41 @@
 let elementName = "ld2-edit-query-where-component"
 
-import "/components/field-edit.mjs"
+import "/components/field-edit-inline.mjs"
 import "/components/field-list.mjs"
+import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
   <link rel='stylesheet' href='/css/global.css'>
   <style>
-    :host{display: block;}
+    :host{}
     #container{
     }
-    field-list{
-      width: 500px;
-    }
-    field-edit{margin-left: 3px; margin-right: 3px;}
+    field-edit-inline{margin-left: 3px; margin-right: 3px;}
   </style>
-  <div id="container">
-    
-    Where 
-      <field-edit type="text" label="Field" id="field"></field-edit>
+  <span id="container">
+    <field-edit-inline type="text" label="Field" id="field"></field-edit-inline>
     is 
-      <field-edit type="select" label="Type" id="type">
+      <field-edit-inline type="select" label="Type" id="type">
         <option value=""></option>
         <option value="fixed">A fixed value</option>
-        <option value="fixed-not">Anything but</option>
+        <option value="fixed-not">Anything but the value</option>
         <option value="range">A range of values</option>
         <option value="matches">A match (reg. exp.)</option>
-      </field-edit>
+      </field-edit-inline>
     
     <span id="fixed-container" class="hidden">
       of 
-      <field-edit type="text" label="Value" id="value"></field-edit>
+      <field-edit-inline type="text" label="Value" id="value"></field-edit-inline>
     </span>
 
     <span id="range-container" class="hidden">
       between
-      <field-edit type="text" label="From" id="from" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit>
+      <field-edit-inline type="text" label="From" id="from" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit-inline>
       and 
-      <field-edit type="text" label="To" id="to" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit>
+      <field-edit-inline type="text" label="To" id="to" title="Value is inclusive. Dates are formattet as YYYYMMDD"></field-edit-inline>
     </span>
-  </div>
+  </span>
 `;
 
 class Element extends HTMLElement {
@@ -81,6 +77,14 @@ class Element extends HTMLElement {
     }
     this.spec = newSpec
     return this.spec.type && this.spec.field ? this.spec : null
+  }
+
+  static get observedAttributes() {
+    return ["edit-mode"];
+  }  
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    toggleEditMode(this, newValue != null)
   }
 
   connectedCallback() {

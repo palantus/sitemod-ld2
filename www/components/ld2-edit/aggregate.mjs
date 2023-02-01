@@ -1,7 +1,8 @@
 let elementName = "ld2-edit-query-aggregate-component"
 
-import "/components/field-edit.mjs"
+import "/components/field-edit-inline.mjs"
 import "/components/field-list.mjs"
+import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -12,23 +13,23 @@ template.innerHTML = `
     field-list{
       width: 500px;
     }
-    field-edit{margin-left: 3px; margin-right: 3px;}
+    field-edit-inline{margin-left: 3px; margin-right: 3px;}
   </style>
   <span id="container">
     by getting 
-      <field-edit type="select" label="Type" id="type">
+      <field-edit-inline type="select" label="Type" id="type">
         <option value=""></option>
         <option value="sum">Sum of all values</option>
         <option value="count">Count of all values</option>
         <option value="first">First value</option>
         <option value="last">Last value</option>
-      </field-edit>
+      </field-edit-inline>
     <span id="field-container">
       from field 
-        <field-edit type="text" label="Field" id="field"></field-edit>
+        <field-edit-inline type="text" label="Field" id="field"></field-edit-inline>
     </span>
     naming it
-      <field-edit type="text" label="Name" id="name"></field-edit>
+      <field-edit-inline type="text" label="Name" id="name"></field-edit-inline>
   </span>
 `;
 
@@ -71,6 +72,14 @@ class Element extends HTMLElement {
     }
     this.spec = newSpec
     return this.spec.type && (this.spec.field||this.spec.name) ? this.spec : null
+  }
+
+  static get observedAttributes() {
+    return ["edit-mode"];
+  }  
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    toggleEditMode(this, newValue != null)
   }
 
   connectedCallback() {

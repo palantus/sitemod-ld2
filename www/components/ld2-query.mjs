@@ -336,6 +336,18 @@ class Element extends HTMLElement {
   }
 }
 
+export function toggleEditMode(component, editModeOn){
+  component.shadowRoot.querySelectorAll("field-edit-inline").forEach(e => e.toggleAttribute("edit", editModeOn));
+  let componentNames = [
+    "ld2-edit-query-where-component",
+    "ld2-edit-query-on-component",
+    "ld2-edit-query-group-component",
+    "ld2-edit-query-ds-component",
+    "ld2-edit-query-aggregate-component",
+    "ld2-edit-query-field-component",
+  ]
+  component.shadowRoot.querySelectorAll(componentNames.join(",")).forEach(e => e.toggleAttribute("edit-mode", editModeOn));
+}
 
 window.customElements.define(elementName, Element);
 export {Element, elementName as name}

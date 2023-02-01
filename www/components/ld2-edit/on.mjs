@@ -1,7 +1,8 @@
 let elementName = "ld2-edit-query-on-component"
 
-import "/components/field-edit.mjs"
+import "/components/field-edit-inline.mjs"
 import "/components/field-list.mjs"
+import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -9,13 +10,13 @@ template.innerHTML = `
   <style>
     #container{
     }
-    field-edit{margin-left: 3px; margin-right: 3px;}
+    field-edit-inline{margin-left: 3px; margin-right: 3px;}
   </style>
   <span id="container">
     the field 
-      <field-edit type="text" label="This field" id="this"></field-edit>
+      <field-edit-inline type="text" label="This field" id="this"></field-edit-inline>
     in <u>this</u> data source must be equal to 
-      <field-edit type="text" label="Remote field" id="remote"></field-edit>
+      <field-edit-inline type="text" label="Remote field" id="remote"></field-edit-inline>
     in the <u>other</u>
   </span>
 `;
@@ -51,6 +52,14 @@ class Element extends HTMLElement {
     }
     this.spec = newSpec
     return this.spec
+  }
+
+  static get observedAttributes() {
+    return ["edit-mode"];
+  }  
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    toggleEditMode(this, newValue != null)
   }
 
   connectedCallback() {

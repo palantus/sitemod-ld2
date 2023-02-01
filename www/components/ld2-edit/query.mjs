@@ -2,6 +2,7 @@ let elementName = "ld2-edit-query-component"
 
 import "/components/ld2-edit/datasource.mjs"
 import "/components/field-list.mjs"
+import "/components/field-edit-inline.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -13,24 +14,18 @@ template.innerHTML = `
     #datasources ld2-edit-query-ds-component{
       margin-bottom: 20px;
     }
-    field-list{
-      width: 400px;
-    }
-    button{margin-bottom: 10px;}
   </style>
   <div id="container">
     <h2>Query</h2>
 
     <div id="summary">
       <div id="summary-text"></div>
-      <button id="show-details">Show details</button>
     </div>
 
-    <div id="details" class="hidden">
-      <field-list labels-pct="35">
-        <field-edit type="text" label="Main datasource" id="main-ds"></field-edit>
-      </field-list>
-    </div>
+    Output data from data source 
+    <field-edit-inline type="text" label="Main datasource" id="main-ds"></field-edit-inline>
+    .
+    <br><br>
 
     <div id="datasources">
     </div>
@@ -45,18 +40,15 @@ class Element extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-    this.shadowRoot.getElementById("show-details").addEventListener("click", () => {
-      this.shadowRoot.getElementById("details").classList.toggle("hidden")
-      this.shadowRoot.getElementById("show-details").innerText = this.shadowRoot.getElementById("details").classList.contains("hidden") ? "Show details" : "Hide details"
-    })
-
     this.shadowRoot.getElementById("add-ds").addEventListener("click", () => this.addDS({}));
   }
 
   refreshUI(){
+    /*
     this.shadowRoot.getElementById("summary-text").innerHTML = `
       Fetches data from <span class="highlight">${this.spec.dataSources?.length||0}</span> datasources and results in the output from data source <span class="highlight">${this.spec.mainDS||this.spec.dataSources?.[0]?.name||"N/A"}</span>.
       `
+    */
 
     this.shadowRoot.getElementById("main-ds").setAttribute("value", this.spec.mainDS||"")
 

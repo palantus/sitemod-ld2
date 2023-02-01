@@ -1,14 +1,16 @@
 let elementName = "ld2-edit-query-field-component"
 
-import "/components/field-edit.mjs"
+import "/components/field-edit-inline.mjs"
 import "/components/field-list.mjs"
 
 import "/components/ld2-edit/on.mjs"
 import "/components/ld2-edit/where.mjs"
+import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
   <link rel='stylesheet' href='/css/global.css'>
+  <link rel='stylesheet' href='/css/ld2.css'>
   <style>
     :host{display: block;}
     #container{
@@ -19,39 +21,40 @@ template.innerHTML = `
       width: 500px;
     }
     h3{margin-top: 00px;}
-    field-edit{margin-left: 3px; margin-right: 3px;}
-    #add-on,#add-where{display: block;}
+    field-edit-inline{margin-left: 3px; margin-right: 3px;}
   </style>
   <div id="container">
     <h3><span id="field-title"></span></h3>
 
-    Get field <field-edit type="text" label="Field" id="field"></field-edit> from 
-    <field-edit type="select" label="Source" id="source">
+    Get field <field-edit-inline type="text" label="Field" id="field"></field-edit-inline> from 
+    <field-edit-inline type="select" label="Source" id="source">
       <option value="this">This data source</option>
       <option value="remote">Another data source</option>
-    </field-edit>
-    and name it <field-edit type="text" label="Name" id="name"></field-edit>
+    </field-edit-inline>
+    and name it <field-edit-inline type="text" label="Name" id="name"></field-edit-inline>
 
     <div id="remote-fields">
       Use data source
-        <field-edit type="text" label="Data source" id="ds"></field-edit>
+        <field-edit-inline type="text" label="Data source" id="ds"></field-edit-inline>
       as the source and fetch 
-        <field-edit type="select" label="Type" id="type">
+        <field-edit-inline type="select" label="Type" id="type">
           <option value=""></option>
           <option value="sum">Sum of all records</option>
           <option value="count">Record count</option>
           <option value="first">First record</option>
           <option value="last">Last record</option>
-        </field-edit>
+        </field-edit-inline>
       where
 
       <span id="ons">
       </span>
-      <button id="add-on" class="styled">Add join field</button>
-  
+      <span id="add-on" class="add-button" title="Add join field">&#x2795;</span>
+    
+      <br>
+      Where
       <span id="wheres">
       </span>
-      <button id="add-where" class="styled">Add condition</button>
+      <span id="add-where" class="add-button" title="Add condition">&#x2795;</span>
     </div>
 
   </div>
@@ -70,13 +73,18 @@ class Element extends HTMLElement {
       }
     })
 
-    this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}));
-    this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}));
+    this.shadowRoot.getElementById("name").addEventListener("value-changed", () => {
+      this.getSpec()
+      this.refreshUI()
+    })
+
+    this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}, true));
+    this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}, true));
 
     this.shadowRoot.getElementById("source").addEventListener("value-changed", () => {
       this.shadowRoot.getElementById("remote-fields").classList.toggle("hidden", this.shadowRoot.getElementById("source").getValue() == "this")
       if(this.shadowRoot.getElementById("ons").querySelectorAll("ld2-edit-query-on-component").length == 0){
-        this.addOn({})
+        this.addOn({}, true)
       }
     })
   }
@@ -97,19 +105,28 @@ class Element extends HTMLElement {
     this.spec.where?.forEach(spec => this.addWhere(spec))
   }
 
-  addWhere(spec){
+  addWhere(spec, userEvent = false){
+    if(this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0){
+      this.shadowRoot.getElementById("wheres").appendChild(document.createTextNode(" and "));
+    } else {
+      this.shadowRoot.getElementById("wheres").innerHTML = "";
+    }
     let where = document.createElement("ld2-edit-query-where-component")
     where.setSpec(spec)
     this.shadowRoot.getElementById("wheres").appendChild(where);
+    if(userEvent) where.toggleAttribute("edit-mode", true)
   }
 
-  addOn(spec){
-    if(this.shadowRoot.getElementById("ons").childNodes.length > 0){
+  addOn(spec, userEvent = false){
+    if(this.shadowRoot.getElementById("ons").querySelectorAll("ld2-edit-query-on-component").length > 0){
       this.shadowRoot.getElementById("ons").appendChild(document.createTextNode(" and "));
+    } else {
+      this.shadowRoot.getElementById("ons").innerHTML = "";
     }
     let on = document.createElement("ld2-edit-query-on-component")
     on.setSpec(spec)
     this.shadowRoot.getElementById("ons").appendChild(on);
+    if(userEvent) on.toggleAttribute("edit-mode", true)
   }
 
   setSpec(spec){
@@ -128,6 +145,14 @@ class Element extends HTMLElement {
     }
     this.spec = newSpec
     return this.spec.field ? this.spec : null
+  }
+
+  static get observedAttributes() {
+    return ["edit-mode"];
+  }  
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    toggleEditMode(this, newValue != null)
   }
 
   connectedCallback() {

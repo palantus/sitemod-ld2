@@ -3,12 +3,14 @@ let elementName = "ld2-edit-query-ds-component"
 import "/components/ld2-edit/field.mjs"
 import "/components/ld2-edit/aggregate.mjs"
 import "/components/ld2-edit/group.mjs"
-import "/components/field-edit.mjs"
+import "/components/field-edit-inline.mjs"
 import "/components/field-list.mjs"
+import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
   <link rel='stylesheet' href='/css/global.css'>
+  <link rel='stylesheet' href='/css/ld2.css'>
   <style>
     :host{display: block;}
     #container{
@@ -21,21 +23,21 @@ template.innerHTML = `
       width: 500px;
     }
     button{margin-bottom: 10px;}
-    #add-on,#add-where{display: block;}
     #groupfields,#sumfields{width: 300px;}
-    field-edit{margin-left: 3px; margin-right: 3px;}
+    field-edit-inline{margin-left: 3px; margin-right: 3px;}
   </style>
   <div id="container">
     <h2>Data source: <span id="header-title"></span></h2>
     <div id="summary">
       <div id="summary-text"></div>
-      <button id="show-details">Show details</button>
+      <button id="show-details" class="styled">Show details</button>
+      <button id="edit-mode" class="styled hidden">Toggle edit</button>
     </div>
     <div id="details" class="hidden">
       Get data from table 
-      <field-edit type="text" label="Table" id="table"></field-edit>
+      <field-edit-inline type="text" label="Table" id="table"></field-edit-inline>
       and name it 
-      <field-edit type="text" label="Name" id="name"></field-edit>
+      <field-edit-inline type="text" label="Name" id="name"></field-edit-inline>
       <br>
       Return the following fields:
       <div id="fields">
@@ -43,33 +45,35 @@ template.innerHTML = `
       <button id="add-field" class="styled">Add field</button>
       <br>
       Group by 
-      <span id="groups"></span>.
-      <button id="add-group" class="styled">Add group</button>
+      <span id="groups"></span>
+      <span id="add-group" class="add-button" title="Add group">&#x2795;</span>
 
       <span id="aggregate-container">
         <br>
         Aggregate
         <span id="aggregates"></span>
-        <button id="add-aggregate" class="styled">Add aggregate</button>
+        <span id="add-aggregate" class="add-button" title="Add aggregate">&#x2795;</span>
       </span>
       <br>
       Join 
-      <field-edit type="select" label="Type" id="join-type">
+      <field-edit-inline type="select" label="Type" id="join-type">
         <option value="">None</option>
         <option value="exist">Exist (matching records must exist in remote data source)</option>
-      </field-edit>
+      </field-edit-inline>
       <span id="join-container">
         with data source 
-          <field-edit type="text" label="Data source" id="join-ds"></field-edit>
+          <field-edit-inline type="text" label="Data source" id="join-ds"></field-edit-inline>
         where 
         <span id="join-ons">
         </span>
-        <button id="add-on" class="styled">Add join field</button>
+        <span id="add-on" class="add-button" title="Add join field">&#x2795;</span>
       </span>
     
+      <br>
+      Where
       <span id="wheres">
       </span>
-      <button id="add-where" class="styled">Add condition</button>
+      <span id="add-where" class="add-button" title="Add condition">&#x2795;</span>
     </div>
   </div>
 `;
@@ -86,16 +90,22 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("show-details").addEventListener("click", () => {
       this.shadowRoot.getElementById("details").classList.toggle("hidden")
       this.shadowRoot.getElementById("show-details").innerText = this.shadowRoot.getElementById("details").classList.contains("hidden") ? "Show details" : "Hide details"
+      this.shadowRoot.getElementById("edit-mode").classList.toggle("hidden", this.shadowRoot.getElementById("details").classList.contains("hidden"))
     })
 
-    this.shadowRoot.getElementById("add-field").addEventListener("click", () => this.addField({}));
-    this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}));
-    this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}));
-    this.shadowRoot.getElementById("add-group").addEventListener("click", () => this.addGroup({}));
-    this.shadowRoot.getElementById("add-aggregate").addEventListener("click", () => this.addAggregate({}));
+    this.shadowRoot.getElementById("add-field").addEventListener("click", () => this.addField({}, true));
+    this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}, true));
+    this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}, true));
+    this.shadowRoot.getElementById("add-group").addEventListener("click", () => this.addGroup({}, true));
+    this.shadowRoot.getElementById("add-aggregate").addEventListener("click", () => this.addAggregate({}, true));
 
     this.shadowRoot.getElementById("table").addEventListener("value-changed", this.storeAndRefreshUI);
     this.shadowRoot.getElementById("name").addEventListener("value-changed", this.storeAndRefreshUI);
+
+    this.shadowRoot.getElementById("edit-mode").addEventListener("click", () => {
+      this.shadowRoot.getElementById("edit-mode").toggleAttribute("edit-mode")
+      toggleEditMode(this, this.shadowRoot.getElementById("edit-mode").hasAttribute("edit-mode"))
+    });
 
     this.shadowRoot.getElementById("table").addEventListener("value-changed", () => {
       if(!this.shadowRoot.getElementById("name").getValue()){
@@ -110,12 +120,13 @@ class Element extends HTMLElement {
 
   refreshUI(){
 
+    /*
     let columns = [...this.spec.fields||[], ...this.spec.groupBy?.fields||[], ...this.spec.groupBy?.aggregate||[]]
-
     this.shadowRoot.getElementById("summary-text").innerHTML = `
       This data source fetches data from <span class="highlight">${this.spec.table}</span>.<br>
       The output consists of the following columns: ${columns.map(f => `<span class="highlight">${f.name||f.field}</span>`).join(", ")}.
       `
+    */
 
     this.shadowRoot.getElementById("fields").innerHTML = ""
     this.shadowRoot.getElementById("wheres").innerHTML = ""
@@ -143,25 +154,38 @@ class Element extends HTMLElement {
     this.refreshUI();
   }
 
-  addField(spec){
+  addField(spec, userEvent = false){
     let field = document.createElement("ld2-edit-query-field-component")
     field.setSpec(spec)
     this.shadowRoot.getElementById("fields").appendChild(field);
+    if(userEvent) field.toggleAttribute("edit-mode", true)
   }
 
-  addWhere(spec){
+  addWhere(spec, userEvent = false){
+    if(this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0){
+      this.shadowRoot.getElementById("wheres").appendChild(document.createTextNode(" and "));
+    } else {
+      this.shadowRoot.getElementById("wheres").innerHTML = "";
+    }
     let where = document.createElement("ld2-edit-query-where-component")
     where.setSpec(spec)
     this.shadowRoot.getElementById("wheres").appendChild(where);
+    if(userEvent) where.toggleAttribute("edit-mode", true)
   }
 
-  addOn(spec){
+  addOn(spec, userEvent = false){
+    if(this.shadowRoot.getElementById("join-ons").querySelectorAll("ld2-edit-query-on-component").length > 0){
+      this.shadowRoot.getElementById("join-ons").appendChild(document.createTextNode(" and "));
+    } else {
+      this.shadowRoot.getElementById("join-ons").innerHTML = "";
+    }
     let on = document.createElement("ld2-edit-query-on-component")
     on.setSpec(spec)
     this.shadowRoot.getElementById("join-ons").appendChild(on);
+    if(userEvent) on.toggleAttribute("edit-mode", true)
   }
 
-  addAggregate(spec){
+  addAggregate(spec, userEvent = false){
     if(this.shadowRoot.getElementById("aggregates").querySelectorAll("ld2-edit-query-aggregate-component").length > 0){
       this.shadowRoot.getElementById("aggregates").appendChild(document.createTextNode(" and "));
     } else {
@@ -170,9 +194,10 @@ class Element extends HTMLElement {
     let aggregate = document.createElement("ld2-edit-query-aggregate-component")
     aggregate.setSpec(spec)
     this.shadowRoot.getElementById("aggregates").appendChild(aggregate);
+    if(userEvent) aggregate.toggleAttribute("edit-mode", true)
   }
 
-  addGroup(_spec){
+  addGroup(_spec, userEvent = false){
     let spec = typeof _spec === "string" ? {name: _spec, field: _spec} : _spec
     if(this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component").length > 0){
       this.shadowRoot.getElementById("groups").appendChild(document.createTextNode(" and "));
@@ -183,6 +208,7 @@ class Element extends HTMLElement {
     group.setSpec(spec)
     this.shadowRoot.getElementById("groups").appendChild(group);
     this.shadowRoot.getElementById("aggregate-container").classList.toggle("hidden", false);
+    if(userEvent) group.toggleAttribute("edit-mode", true)
   }
 
   setSpec(spec){
