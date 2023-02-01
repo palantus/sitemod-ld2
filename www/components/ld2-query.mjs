@@ -294,7 +294,7 @@ class Element extends HTMLElement {
       curSpec = this.curSpec || this.query.spec || "{}"
     }
     this.curSpec = curSpec;
-    this.shadowRoot.getElementById("unsaved").classList.toggle("hidden", JSON.stringify(JSON.parse(this.query.spec||{})) == JSON.stringify(JSON.parse(this.curSpec)))
+    this.shadowRoot.getElementById("unsaved").classList.toggle("hidden", JSON.stringify(JSON.parse(this.query.spec||"{}")) == JSON.stringify(JSON.parse(this.curSpec)))
     return curSpec;
   }
 
