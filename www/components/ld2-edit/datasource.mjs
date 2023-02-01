@@ -5,6 +5,7 @@ import "/components/ld2-edit/aggregate.mjs"
 import "/components/ld2-edit/group.mjs"
 import "/components/field-edit-inline.mjs"
 import "/components/field-list.mjs"
+import {alertDialog} from "/components/dialog.mjs"
 import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');
@@ -25,6 +26,14 @@ template.innerHTML = `
     button{margin-bottom: 10px;}
     #groupfields,#sumfields{width: 300px;}
     field-edit-inline{margin-left: 3px; margin-right: 3px;}
+    div.field-container{
+      position: relative;
+    }
+    context-menu{
+      position: absolute;
+      top: 0px;
+      right: 0px;
+    }
   </style>
   <div id="container">
     <h2>Data source: <span id="header-title"></span></h2>
@@ -116,6 +125,18 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("join-type").addEventListener("value-changed", () => {
       this.shadowRoot.getElementById("join-container").classList.toggle("hidden", !!!this.shadowRoot.getElementById("join-type").getValue())
     })
+
+    this.shadowRoot.getElementById("fields").addEventListener("item-clicked", e => {
+      switch(e.detail){
+        case "remove":
+          e.target.closest(".field-container")?.remove();
+          this.getSpec()
+          this.refreshUI();
+          break;
+        default:
+          alertDialog("Not implemented yet - sorry!")
+      }
+    })
   }
 
   refreshUI(){
@@ -155,9 +176,22 @@ class Element extends HTMLElement {
   }
 
   addField(spec, userEvent = false){
+    let container = document.createElement("div")
+    container.classList.add("field-container")
+    container.innerHTML = `
+      <context-menu width="150px">
+        <span data-button="remove">Remove field</span>
+        <span data-button="duplicate">Duplicate field</span>
+        <span data-button="move-up">Move field up</span>
+        <span data-button="move-down">Move field down</span>
+        <span data-button="move-top">Move field to top</span>
+        <span data-button="move-bottom">Move field to bottom</span>
+      </context-menu>
+    `
     let field = document.createElement("ld2-edit-query-field-component")
     field.setSpec(spec)
-    this.shadowRoot.getElementById("fields").appendChild(field);
+    container.appendChild(field)
+    this.shadowRoot.getElementById("fields").appendChild(container);
     if(userEvent) field.toggleAttribute("edit-mode", true)
   }
 

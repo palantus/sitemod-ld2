@@ -2,6 +2,7 @@ let elementName = "ld2-edit-query-field-component"
 
 import "/components/field-edit-inline.mjs"
 import "/components/field-list.mjs"
+import "/components/context-menu.mjs"
 
 import "/components/ld2-edit/on.mjs"
 import "/components/ld2-edit/where.mjs"
@@ -15,7 +16,7 @@ template.innerHTML = `
     :host{display: block;}
     #container{
       border: 1px solid var(--contrast-color-muted);
-      padding: 5px
+      padding: 5px;
     }
     field-list{
       width: 500px;
