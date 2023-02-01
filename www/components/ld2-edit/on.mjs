@@ -51,7 +51,7 @@ class Element extends HTMLElement {
       this: this.shadowRoot.getElementById("this").getValue(),
     }
     this.spec = newSpec
-    return this.spec
+    return this.spec.remote && this.spec.this ? this.spec : null
   }
 
   static get observedAttributes() {

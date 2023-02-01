@@ -135,13 +135,18 @@ class Element extends HTMLElement {
   }
 
   getSpec(){
+    let ons = [...this.shadowRoot.getElementById("ons").querySelectorAll("ld2-edit-query-on-component")].map(e => e.getSpec()).filter(spec => !!spec)
+    let wheres = [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()).filter(spec => !!spec)
+
     let newSpec = {
-      name: (this.shadowRoot.getElementById("name").getValue()!=this.shadowRoot.getElementById("field").getValue() ? this.shadowRoot.getElementById("name").getValue() : undefined) || undefined,
+      name: (this.shadowRoot.getElementById("name").getValue() != this.shadowRoot.getElementById("field").getValue() 
+           ? this.shadowRoot.getElementById("name").getValue() 
+           : undefined) || undefined,
       field: this.shadowRoot.getElementById("field").getValue(),
       ds: this.shadowRoot.getElementById("ds").getValue()||undefined,
       type: this.shadowRoot.getElementById("type").getValue()||undefined,
-      on: this.shadowRoot.getElementById("ons").querySelectorAll("ld2-edit-query-on-component").length > 0 ? [...this.shadowRoot.getElementById("ons").querySelectorAll("ld2-edit-query-on-component")].map(e => e.getSpec()) : undefined,
-      where: this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0 ? [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()).filter(spec => !!spec) : undefined,
+      on: ons.length > 0 ? ons : undefined,
+      where: wheres.length > 0 ? wheres : undefined,
     }
     this.spec = newSpec
     return this.spec.field ? this.spec : null

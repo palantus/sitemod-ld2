@@ -217,25 +217,23 @@ class Element extends HTMLElement {
   }
 
   getSpec(){
+    let groupByFields = [...this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component")].map(e => e.getSpec()).filter(spec => !!spec)
+    let aggregates = [...this.shadowRoot.getElementById("aggregates").querySelectorAll("ld2-edit-query-aggregate-component")].map(e => e.getSpec()).filter(spec => !!spec)
+    let wheres = [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()).filter(spec => !!spec) 
+
     let newSpec = {
       name: this.shadowRoot.getElementById("name").getValue(),
       table: this.shadowRoot.getElementById("table").getValue(),
       fields: [...this.shadowRoot.getElementById("fields").querySelectorAll("ld2-edit-query-field-component")].map(e => e.getSpec()).filter(spec => !!spec),
-      groupBy: (this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component").length > 0) ? {
-        fields: this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component").length > 0
-                ? [...this.shadowRoot.getElementById("groups").querySelectorAll("ld2-edit-query-group-component")].map(e => e.getSpec()).filter(spec => !!spec) 
-                : undefined,
-        aggregate: this.shadowRoot.getElementById("aggregates").querySelectorAll("ld2-edit-query-aggregate-component").length > 0
-                   ? [...this.shadowRoot.getElementById("aggregates").querySelectorAll("ld2-edit-query-aggregate-component")].map(e => e.getSpec()).filter(spec => !!spec) 
-                   : undefined,
+      groupBy: groupByFields.length > 0 ? {
+        fields: groupByFields,
+        aggregate: aggregates.length > 0 ? aggregates : undefined,
       } : undefined,
-      where: this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component").length > 0
-        ? [...this.shadowRoot.getElementById("wheres").querySelectorAll("ld2-edit-query-where-component")].map(e => e.getSpec()).filter(spec => !!spec) 
-        : undefined,
+      where: wheres.length > 0 ? wheres : undefined,
       join: this.shadowRoot.getElementById("join-type").getValue() ? {
         type: this.shadowRoot.getElementById("join-type").getValue(),
         ds: this.shadowRoot.getElementById("join-ds").getValue(),
-        on: [...this.shadowRoot.getElementById("join-ons").querySelectorAll("ld2-edit-query-on-component")].map(e => e.getSpec()),
+        on: [...this.shadowRoot.getElementById("join-ons").querySelectorAll("ld2-edit-query-on-component")].map(e => e.getSpec()).filter(spec => !!spec),
       } : undefined,
     }
     this.spec = newSpec

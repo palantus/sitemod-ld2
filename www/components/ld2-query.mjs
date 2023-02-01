@@ -246,6 +246,7 @@ class Element extends HTMLElement {
 
   editUI(){
     if(!this.shadowRoot.getElementById("edit-ui-container").classList.contains("hidden")){
+      this.getCurSpec()
       this.shadowRoot.getElementById("edit-ui-container").classList.toggle("hidden", true)
       return;
     }
@@ -257,6 +258,7 @@ class Element extends HTMLElement {
 
   editRaw(){
     if(!this.shadowRoot.getElementById("edit-raw-container").classList.contains("hidden")){
+      this.getCurSpec()
       this.shadowRoot.getElementById("edit-raw-container").classList.toggle("hidden", true)
       return;
     }
