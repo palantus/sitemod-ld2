@@ -82,7 +82,7 @@ class Element extends HTMLElement {
     this.shadowRoot.querySelector("table-paging").page = 1
     await this.reader.fillTableMetadata(this.tableName)
     this.meta = this.reader.tables[this.tableName];
-    this.showRecords()
+    await this.showRecords()
   }
 
   doSearch(){

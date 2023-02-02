@@ -262,18 +262,20 @@ class Element extends HTMLElement {
       </tr>`).join("")
 
     this.shadowRoot.getElementById("file-content").classList.toggle("hidden", false)
+    this.shadowRoot.getElementById("right").classList.toggle("hidden", true)
   }
 
   async tableClicked(e){
     let tabName = e.target.closest("tr")?.querySelector(".tabname")?.innerText
     if(!tabName) return;
-    this.curTabName = tabName;
     let right = this.shadowRoot.getElementById("right")
-    right.classList.toggle("hidden", false)
+    right.classList.toggle("hidden", true)
+    this.curTabName = tabName;
     right.querySelector("#rightheader h2").innerText = tabName;
     let browser = right.querySelector("tablebrowser-component")
     browser.setReader(this.reader)
-    browser.browse(tabName)
+    await browser.browse(tabName)
+    right.classList.toggle("hidden", false)
   }
 
   async exportTableCSV(){

@@ -174,13 +174,17 @@ class Element extends HTMLElement {
   async setReader(reader){
     this.reader = reader;
     this.curSpec = null;
+    this.clearCaches()
+  }
+
+  async clearCaches(){
     this.cachedResult = null;
     this.lastRunQuery = null;
   }
 
   async runAndShow(){
-    let result = await this.runQuery()
     this.shadowRoot.getElementById("result").classList.add("hidden")
+    let result = await this.runQuery()
     let fields = [...Object.keys(result[0])]
     this.shadowRoot.querySelector("#result thead").innerHTML = fields.map(f => `<th class="${typeof result[0][f]}">${f}</th>`).join("")
     this.shadowRoot.querySelector("#result tbody").innerHTML = result.map(r => `
@@ -190,8 +194,8 @@ class Element extends HTMLElement {
   }
 
   async runCSV(){
-    let result = await this.runQuery()
     this.shadowRoot.getElementById("result").classList.add("hidden")
+    let result = await this.runQuery()
       
     let fields = [...Object.keys(result[0])]
     let header = fields.join(";")

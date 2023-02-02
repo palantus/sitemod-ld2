@@ -127,7 +127,8 @@ class Element extends HTMLElement {
     this.reader = reader
     await this.reader.fillTableMetadata(this.tableName)
     this.meta = this.reader.tables[this.tableName];
-    this.refreshData()
+    await this.refreshData()
+    this.shadowRoot.getElementById("cur-exp")?.clearCaches();
   }
 
   async refreshData(){
