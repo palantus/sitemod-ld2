@@ -15,7 +15,7 @@ template.innerHTML = `
     #summary-text{margin-bottom: 5px;}
     #details{margin-bottom: 15px;}
     #datasources ld2-edit-query-ds-component{
-      margin: 5px;
+      margin: 10px;
     }
     .ds-container{
       position: relative;

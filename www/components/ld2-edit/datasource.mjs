@@ -17,13 +17,13 @@ template.innerHTML = `
     :host{display: block;}
     #container{
     }
-    #summary-text{margin-bottom: 5px;}
     #fields ld2-edit-query-field-component{
       margin-bottom: 15px;
     }
     field-list{
       width: 500px;
     }
+    #summary{margin-bottom: 5px;}
     button{margin-bottom: 10px;}
     #groupfields,#sumfields{width: 300px;}
     field-edit-inline{margin-left: 3px; margin-right: 3px;}
@@ -39,12 +39,14 @@ template.innerHTML = `
     }
   </style>
   <div id="container">
-    Get data from table 
-    <field-edit-inline type="text" label="Table" id="table"></field-edit-inline>
-    and name it 
-    <field-edit-inline type="text" label="Name" id="name"></field-edit-inline>
-    <br>
-    Return the following fields:
+    <div id="summary">
+      Get data from table 
+      <field-edit-inline type="text" label="Table" id="table"></field-edit-inline>
+      and name it 
+      <field-edit-inline type="text" label="Name" id="name"></field-edit-inline>
+      . Return the following fields:
+    </div>
+    
     <div id="fields" class="container">
     </div>
     <button id="add-field" class="styled">Add field</button>
@@ -148,15 +150,6 @@ class Element extends HTMLElement {
   }
 
   refreshUI(){
-
-    /*
-    let columns = [...this.spec.fields||[], ...this.spec.groupBy?.fields||[], ...this.spec.groupBy?.aggregate||[]]
-    this.shadowRoot.getElementById("summary-text").innerHTML = `
-      This data source fetches data from <span class="highlight">${this.spec.table}</span>.<br>
-      The output consists of the following columns: ${columns.map(f => `<span class="highlight">${f.name||f.field}</span>`).join(", ")}.
-      `
-    */
-
     this.shadowRoot.getElementById("fields").innerHTML = ""
     this.shadowRoot.getElementById("wheres").innerHTML = ""
     this.shadowRoot.getElementById("join-ons").innerHTML = ""

@@ -15,7 +15,7 @@ template.innerHTML = `
     :host{display: block;}
     #container{
       border: 1px solid var(--contrast-color-muted);
-      padding: 5px;
+      padding: 7px;
     }
     field-list{
       width: 500px;
