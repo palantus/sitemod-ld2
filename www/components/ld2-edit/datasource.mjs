@@ -127,15 +127,39 @@ class Element extends HTMLElement {
     })
 
     this.shadowRoot.getElementById("fields").addEventListener("item-clicked", e => {
+      let container = e.target.closest(".field-container")
+      let field =  container?.querySelector("ld2-edit-query-field-component")
+      let fieldSpec = field?.getSpec()
+      if(!container||!field) return;
       switch(e.detail){
         case "remove":
-          e.target.closest(".field-container")?.remove();
+          container?.remove();
           this.getSpec()
-          this.refreshUI();
+          break;
+        case "duplicate":
+          this.getSpec()
+          this.spec.fields.push(this.spec.fields.find(f => (f.name||f.field) == (fieldSpec.name||fieldSpec.field)))
+          break;
+        case "move-up":
+          if(container.previousElementSibling) container.parentNode.insertBefore(container, container.previousElementSibling);
+          this.getSpec()
+          break;
+        case "move-down":
+          if(container.nextElementSibling) container.parentNode.insertBefore(container.nextElementSibling, container);
+          this.getSpec()
+          break;
+        case "move-top":
+          container.parentNode.insertBefore(container, container.parentNode.firstElementChild);
+          this.getSpec()
+          break;
+        case "move-bottom":
+          container.parentNode.insertBefore(container, null);
+          this.getSpec()
           break;
         default:
           alertDialog("Not implemented yet - sorry!")
       }
+      this.refreshUI();
     })
   }
 
@@ -178,6 +202,7 @@ class Element extends HTMLElement {
   addField(spec, userEvent = false){
     let container = document.createElement("div")
     container.classList.add("field-container")
+    container.setAttribute("data-name", spec.name||spec.field)
     container.innerHTML = `
       <context-menu width="150px">
         <span data-button="remove">Remove field</span>
