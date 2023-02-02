@@ -313,6 +313,7 @@ class Element extends HTMLElement {
     await api.patch(`ld2/query/${this.queryId}`, {spec})
     new Toast({text: "Saved!"})
     this.refreshData(false);
+    this.shadowRoot.getElementById("unsaved").classList.add("hidden")
   }
 
   async deleteQuery(){
