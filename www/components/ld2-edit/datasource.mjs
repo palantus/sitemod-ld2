@@ -5,6 +5,7 @@ import "/components/ld2-edit/aggregate.mjs"
 import "/components/ld2-edit/group.mjs"
 import "/components/field-edit-inline.mjs"
 import "/components/field-list.mjs"
+import "/components/context-menu.mjs"
 import {alertDialog} from "/components/dialog.mjs"
 import { toggleEditMode } from "../ld2-query.mjs"
 
@@ -31,8 +32,8 @@ template.innerHTML = `
     }
     context-menu{
       position: absolute;
-      top: 0px;
-      right: 0px;
+      top: 5px;
+      right: 5px;
     }
   </style>
   <div id="container">

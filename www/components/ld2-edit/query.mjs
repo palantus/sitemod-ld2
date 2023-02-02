@@ -3,6 +3,7 @@ let elementName = "ld2-edit-query-component"
 import "/components/ld2-edit/datasource.mjs"
 import "/components/field-list.mjs"
 import "/components/field-edit-inline.mjs"
+import "/components/context-menu.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -13,6 +14,14 @@ template.innerHTML = `
     #details{margin-bottom: 15px;}
     #datasources ld2-edit-query-ds-component{
       margin-bottom: 20px;
+    }
+    .ds-container{
+      position: relative;
+    }
+    context-menu{
+      position: absolute;
+      top: 5px;
+      right: 5px;
     }
   </style>
   <div id="container">
@@ -41,6 +50,21 @@ class Element extends HTMLElement {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.shadowRoot.getElementById("add-ds").addEventListener("click", () => this.addDS({}));
+
+    this.shadowRoot.getElementById("datasources").addEventListener("item-clicked", e => {
+      let container = e.target.closest(".ds-container")
+      let ds =  container?.querySelector("ld2-edit-query-ds-component")
+      if(!container||!ds) return;
+      switch(e.detail){
+        case "remove":
+          container?.remove();
+          this.getSpec()
+          break;
+        default:
+          alertDialog("Not implemented yet - sorry!")
+      }
+      this.refreshUI();
+    })
   }
 
   refreshUI(){
@@ -59,10 +83,19 @@ class Element extends HTMLElement {
   }
 
   addDS(spec){
+    let container = document.createElement("div")
+    container.classList.add("ds-container")
+    container.setAttribute("data-name", spec.name||spec.field)
+    container.innerHTML = `
+      <context-menu width="150px">
+        <span data-button="remove">Remove data source</span>
+      </context-menu>
+    `
     let ds = document.createElement("ld2-edit-query-ds-component")
     ds.setSpec(spec)
     ds.classList.add("section")
-    this.shadowRoot.getElementById("datasources").appendChild(ds);
+    container.appendChild(ds)
+    this.shadowRoot.getElementById("datasources").appendChild(container);
   }
 
   setSpec(spec){
