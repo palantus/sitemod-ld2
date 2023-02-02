@@ -32,59 +32,53 @@ template.innerHTML = `
     }
     context-menu{
       position: absolute;
-      top: 5px;
-      right: 5px;
+      top: 8px;
+      right: 7px;
+      font-size: 111%;
+      padding: 10px;
     }
   </style>
   <div id="container">
-    <h2>Data source: <span id="header-title"></span></h2>
-    <div id="summary">
-      <div id="summary-text"></div>
-      <button id="show-details" class="styled">Show details</button>
-      <button id="edit-mode" class="styled hidden">Toggle edit</button>
+    Get data from table 
+    <field-edit-inline type="text" label="Table" id="table"></field-edit-inline>
+    and name it 
+    <field-edit-inline type="text" label="Name" id="name"></field-edit-inline>
+    <br>
+    Return the following fields:
+    <div id="fields" class="container">
     </div>
-    <div id="details" class="hidden">
-      Get data from table 
-      <field-edit-inline type="text" label="Table" id="table"></field-edit-inline>
-      and name it 
-      <field-edit-inline type="text" label="Name" id="name"></field-edit-inline>
-      <br>
-      Return the following fields:
-      <div id="fields">
-      </div>
-      <button id="add-field" class="styled">Add field</button>
-      <br>
-      Group by 
-      <span id="groups"></span>
-      <span id="add-group" class="add-button" title="Add group">&#x2795;</span>
+    <button id="add-field" class="styled">Add field</button>
+    <br>
+    Group by 
+    <span id="groups"></span>
+    <span id="add-group" class="add-button" title="Add group">&#x2795;</span>
 
-      <span id="aggregate-container">
-        <br>
-        Aggregate
-        <span id="aggregates"></span>
-        <span id="add-aggregate" class="add-button" title="Add aggregate">&#x2795;</span>
-      </span>
+    <span id="aggregate-container">
       <br>
-      Join 
-      <field-edit-inline type="select" label="Type" id="join-type">
-        <option value="">None</option>
-        <option value="exist">Exist (matching records must exist in remote data source)</option>
-      </field-edit-inline>
-      <span id="join-container">
-        with data source 
-          <field-edit-inline type="text" label="Data source" id="join-ds"></field-edit-inline>
-        where 
-        <span id="join-ons">
-        </span>
-        <span id="add-on" class="add-button" title="Add join field">&#x2795;</span>
+      Aggregate
+      <span id="aggregates"></span>
+      <span id="add-aggregate" class="add-button" title="Add aggregate">&#x2795;</span>
+    </span>
+    <br>
+    Join 
+    <field-edit-inline type="select" label="Type" id="join-type">
+      <option value="">None</option>
+      <option value="exist">Exist (matching records must exist in remote data source)</option>
+    </field-edit-inline>
+    <span id="join-container">
+      with data source 
+        <field-edit-inline type="text" label="Data source" id="join-ds"></field-edit-inline>
+      where 
+      <span id="join-ons">
       </span>
-    
-      <br>
-      Where
-      <span id="wheres">
-      </span>
-      <span id="add-where" class="add-button" title="Add condition">&#x2795;</span>
-    </div>
+      <span id="add-on" class="add-button" title="Add join field">&#x2795;</span>
+    </span>
+  
+    <br>
+    Where
+    <span id="wheres">
+    </span>
+    <span id="add-where" class="add-button" title="Add condition">&#x2795;</span>
   </div>
 `;
 
@@ -97,12 +91,6 @@ class Element extends HTMLElement {
 
     this.storeAndRefreshUI = this.storeAndRefreshUI.bind(this)
 
-    this.shadowRoot.getElementById("show-details").addEventListener("click", () => {
-      this.shadowRoot.getElementById("details").classList.toggle("hidden")
-      this.shadowRoot.getElementById("show-details").innerText = this.shadowRoot.getElementById("details").classList.contains("hidden") ? "Show details" : "Hide details"
-      this.shadowRoot.getElementById("edit-mode").classList.toggle("hidden", this.shadowRoot.getElementById("details").classList.contains("hidden"))
-    })
-
     this.shadowRoot.getElementById("add-field").addEventListener("click", () => this.addField({}, true));
     this.shadowRoot.getElementById("add-on").addEventListener("click", () => this.addOn({}, true));
     this.shadowRoot.getElementById("add-where").addEventListener("click", () => this.addWhere({}, true));
@@ -111,11 +99,6 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("table").addEventListener("value-changed", this.storeAndRefreshUI);
     this.shadowRoot.getElementById("name").addEventListener("value-changed", this.storeAndRefreshUI);
-
-    this.shadowRoot.getElementById("edit-mode").addEventListener("click", () => {
-      this.shadowRoot.getElementById("edit-mode").toggleAttribute("edit-mode")
-      toggleEditMode(this, this.shadowRoot.getElementById("edit-mode").hasAttribute("edit-mode"))
-    });
 
     this.shadowRoot.getElementById("table").addEventListener("value-changed", () => {
       if(!this.shadowRoot.getElementById("name").getValue()){
@@ -128,11 +111,11 @@ class Element extends HTMLElement {
     })
 
     this.shadowRoot.getElementById("fields").addEventListener("item-clicked", e => {
-      let container = e.target.closest(".field-container")
+      let container = e.detail.menu.closest(".field-container")
       let field =  container?.querySelector("ld2-edit-query-field-component")
       let fieldSpec = field?.getSpec()
       if(!container||!field) return;
-      switch(e.detail){
+      switch(e.detail.button){
         case "remove":
           container?.remove();
           this.getSpec()
@@ -180,7 +163,6 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("aggregates").innerHTML = "none"
     this.shadowRoot.getElementById("groups").innerHTML = "none"
 
-    this.shadowRoot.getElementById("header-title").innerText = this.spec.name||"N/A"
     this.shadowRoot.getElementById("name").setAttribute("value", this.spec.name||"");
     this.shadowRoot.getElementById("table").setAttribute("value", this.spec.table||"");
     this.spec.fields?.forEach(spec => this.addField(spec))

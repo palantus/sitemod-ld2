@@ -4,6 +4,8 @@ import "/components/ld2-edit/datasource.mjs"
 import "/components/field-list.mjs"
 import "/components/field-edit-inline.mjs"
 import "/components/context-menu.mjs"
+import "/components/collapsible-card.mjs"
+import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -13,15 +15,19 @@ template.innerHTML = `
     #summary-text{margin-bottom: 5px;}
     #details{margin-bottom: 15px;}
     #datasources ld2-edit-query-ds-component{
-      margin-bottom: 20px;
+      margin: 5px;
     }
     .ds-container{
       position: relative;
+      margin-bottom: 10px;
+      display: block;
     }
     context-menu{
       position: absolute;
-      top: 5px;
-      right: 5px;
+      top: 8px;
+      right: 7px;
+      font-size: 111%;
+      padding: 10px;
     }
   </style>
   <div id="container">
@@ -36,7 +42,7 @@ template.innerHTML = `
     .
     <br><br>
 
-    <div id="datasources">
+    <div id="datasources" class="container">
     </div>
     <button id="add-ds" class="styled">Add data source</button>
   </div>
@@ -52,18 +58,22 @@ class Element extends HTMLElement {
     this.shadowRoot.getElementById("add-ds").addEventListener("click", () => this.addDS({}));
 
     this.shadowRoot.getElementById("datasources").addEventListener("item-clicked", e => {
-      let container = e.target.closest(".ds-container")
+      let container = e.detail.menu.closest(".ds-container")
       let ds =  container?.querySelector("ld2-edit-query-ds-component")
       if(!container||!ds) return;
-      switch(e.detail){
+      switch(e.detail.button){
         case "remove":
           container?.remove();
           this.getSpec()
+          this.refreshUI();
+          break;
+        case "toggle-edit":
+          container.toggleAttribute("edit-mode")
+          toggleEditMode(ds, container.hasAttribute("edit-mode"))
           break;
         default:
           alertDialog("Not implemented yet - sorry!")
       }
-      this.refreshUI();
     })
   }
 
@@ -83,17 +93,18 @@ class Element extends HTMLElement {
   }
 
   addDS(spec){
-    let container = document.createElement("div")
+    let container = document.createElement("collapsible-card")
     container.classList.add("ds-container")
-    container.setAttribute("data-name", spec.name||spec.field)
+    container.setAttribute("data-name", spec.name||spec.table)
     container.innerHTML = `
+      <span slot="title">${spec.name||spec.table}</span>
       <context-menu width="150px">
         <span data-button="remove">Remove data source</span>
+        <span data-button="toggle-edit">Toggle edit mode</span>
       </context-menu>
     `
     let ds = document.createElement("ld2-edit-query-ds-component")
     ds.setSpec(spec)
-    ds.classList.add("section")
     container.appendChild(ds)
     this.shadowRoot.getElementById("datasources").appendChild(container);
   }
