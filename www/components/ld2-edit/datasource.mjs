@@ -173,6 +173,7 @@ class Element extends HTMLElement {
   storeAndRefreshUI(){
     this.getSpec();
     this.refreshUI();
+    this.dispatchEvent(new CustomEvent("ds-name-changed", {bubbles: true, cancelable: true, detail: {ds: this, name: this.spec.name||this.spec.table}}))
   }
 
   addField(spec, userEvent = false){

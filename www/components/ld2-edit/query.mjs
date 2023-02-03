@@ -57,6 +57,12 @@ class Element extends HTMLElement {
 
     this.shadowRoot.getElementById("add-ds").addEventListener("click", () => this.addDS({}));
 
+    this.shadowRoot.getElementById("datasources").addEventListener("ds-name-changed", e => {
+      let ds = e.detail.ds
+      let name = e.detail.name
+      ds.closest(".ds-container").querySelector("span").innerText = name
+    })
+
     this.shadowRoot.getElementById("datasources").addEventListener("item-clicked", e => {
       let container = e.detail.menu.closest(".ds-container")
       let ds =  container?.querySelector("ld2-edit-query-ds-component")
