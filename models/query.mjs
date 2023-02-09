@@ -1,6 +1,7 @@
 import Entity, {query, nextNum} from "entitystorage"
 import ACL from "../../../models/acl.mjs"
 import DataType from "../../../models/datatype.mjs"
+import Share from "../../../models/share.mjs"
 import User from "../../../models/user.mjs"
 
 export const UNIQUE_TYPE_NAME = "ld2-query"
@@ -55,6 +56,11 @@ export default class Query extends Entity {
   access(user, shareKey) {
     let acl = new ACL(this, DataType.lookup(UNIQUE_TYPE_NAME))
     return "" + (acl.hasAccess(user, "r", shareKey) ? 'r' : '') + (acl.hasAccess(user, "w", shareKey) ? 'w' : '')
+  }
+  
+  delete(){
+    this.rels.share?.forEach(s => Share.from(s).delete())
+    super.delete()
   }
 
   get owner(){
