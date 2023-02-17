@@ -35,7 +35,7 @@ template.innerHTML = `
     <div id="tabcontent" class="hidden">
 
       <div id="topflex">
-        <div><input id="search" placeholder="Search"></input></div>
+        <div><input id="search" placeholder="Filter"></input></div>
         <table-paging maxPerPage=20></table-paging>
       </div>
       <div id="tabcontainer">
