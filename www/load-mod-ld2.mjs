@@ -1,5 +1,7 @@
-import {addFileAction} from "/libs/actions.mjs"
-
 export async function load(){
-  addFileAction("application/ld2", {title: "Inspect data", gotoPath: "/ld2", access: "r", permission: "ld2.read"})
+  //Ensure that it works without files installed
+  try{
+    let actions = await import("/libs/actions.mjs")
+    actions?.addFileAction("application/ld2", {title: "Inspect data", gotoPath: "/ld2", access: "r", permission: "ld2.read"})
+  } catch(err){}
 }
