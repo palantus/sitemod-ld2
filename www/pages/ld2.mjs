@@ -167,6 +167,7 @@ class Element extends HTMLElement {
   }
 
   async attemptLoadParmFile(){
+    this.federationId = state().query["federation-id"] || this.getAttribute("federation-id") || null;
     let hash = state().query.hash || this.getAttribute("hash")
     if(hash){
       this.loadFileFromHash(hash)
@@ -183,12 +184,14 @@ class Element extends HTMLElement {
     if(!fileHash) return;
     this.shadowRoot.getElementById('downloadFile').classList.toggle("hidden", false)
     if(!this.hasAttribute("hidecontrols")){
-      pushStateQuery({hash: fileHash})
+      pushStateQuery({hash: fileHash, "federation-id": this.federationId || undefined})
     }
 
-    let fileMeta = await api.get(`file/${fileHash}`)
+    let fileUrl = this.federationId ? `federation/${this.federationId}/api/file/${fileHash}` : `file/${fileHash}`;
+    let fileDownloadUrl = this.federationId ? `federation/${this.federationId}/api/file/dl/${fileHash}` : `file/dl/${fileHash}`;
+    let fileMeta = await api.get(fileUrl)
     let ext = fileMeta.name.split(".").pop();
-    let response = await api.fetch(`file/download/${fileHash}`)
+    let response = await api.fetch(fileDownloadUrl)
     let data = ext == "ld2" ? await response.blob() : await response.text();
     
     if(this.reader) this.reader.reset();
@@ -203,12 +206,14 @@ class Element extends HTMLElement {
     if(!id) return;
     this.shadowRoot.getElementById('downloadFile').classList.toggle("hidden", false)
     if(!this.hasAttribute("hidecontrols")){
-      pushStateQuery({"file-id": id})
+      pushStateQuery({"file-id": id, "federation-id": this.federationId || undefined})
     }
 
-    let fileMeta = await api.get(`file/${id}`)
+    let fileUrl = this.federationId ? `federation/${this.federationId}/api/file/${id}` : `file/${id}`;
+    let fileDownloadUrl = this.federationId ? `federation/${this.federationId}/api/file/dl/${id}` : `file/dl/${id}`;
+    let fileMeta = await api.get(fileUrl)
     let ext = fileMeta.name.split(".").pop();
-    let response = await api.fetch(`file/download/${id}`)
+    let response = await api.fetch(fileDownloadUrl)
     let data = ext == "ld2" ? await response.blob() : await response.text();
 
     if(this.reader) this.reader.reset();
