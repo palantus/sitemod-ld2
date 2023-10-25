@@ -1,10 +1,10 @@
 let elementName = "ld2-queries-component"
 
-import api from "/system/api.mjs"
-import { promptDialog } from "/components/dialog.mjs"
-import {userPermissions} from "/system/user.mjs"
-import "/components/table-paging.mjs"
-import "/components/ld2-query.mjs"
+import api from "../system/api.mjs"
+import { promptDialog } from "../components/dialog.mjs"
+import {userPermissions} from "../system/user.mjs"
+import "../components/table-paging.mjs"
+import "../components/ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `

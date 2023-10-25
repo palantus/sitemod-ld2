@@ -1,10 +1,10 @@
 let elementName = "ld2-edit-query-field-component"
 
-import "/components/field-edit-inline.mjs"
-import "/components/field-list.mjs"
+import "../../components/field-edit-inline.mjs"
+import "../../components/field-list.mjs"
 
-import "/components/ld2-edit/on.mjs"
-import "/components/ld2-edit/where.mjs"
+import "../../components/ld2-edit/on.mjs"
+import "../../components/ld2-edit/where.mjs"
 import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');

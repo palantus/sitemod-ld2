@@ -1,12 +1,12 @@
 let elementName = "ld2-edit-query-ds-component"
 
-import "/components/ld2-edit/field.mjs"
-import "/components/ld2-edit/aggregate.mjs"
-import "/components/ld2-edit/group.mjs"
-import "/components/field-edit-inline.mjs"
-import "/components/field-list.mjs"
-import "/components/context-menu.mjs"
-import {alertDialog} from "/components/dialog.mjs"
+import "../../components/ld2-edit/field.mjs"
+import "../../components/ld2-edit/aggregate.mjs"
+import "../../components/ld2-edit/group.mjs"
+import "../../components/field-edit-inline.mjs"
+import "../../components/field-list.mjs"
+import "../../components/context-menu.mjs"
+import {alertDialog} from "../../components/dialog.mjs"
 import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');

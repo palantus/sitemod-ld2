@@ -1,6 +1,6 @@
-import moment from "/libs/moment.js"
-import "/libs/jszip.min.js"
-import {saveFileBlob} from "/libs/file.mjs"
+import moment from "./moment.js"
+import "./jszip.min.js"
+import {saveFileBlob} from "./file.mjs"
 
 export default class LD2Reader{
   files = [];

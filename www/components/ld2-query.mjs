@@ -1,16 +1,16 @@
 let elementName = "ld2-query-component"
 
-import api from "/system/api.mjs"
-import {confirmDialog, alertDialog, promptDialog} from "/components/dialog.mjs"
-import Toast from "/components/toast.mjs"
-import "/components/table-paging.mjs"
-import "/components/field-edit.mjs"
-import "/components/field-list.mjs"
-import "/components/ld2-edit/query.mjs"
+import api from "../system/api.mjs"
+import {confirmDialog, alertDialog, promptDialog} from "../components/dialog.mjs"
+import Toast from "../components/toast.mjs"
+import "../components/table-paging.mjs"
+import "../components/field-edit.mjs"
+import "../components/field-list.mjs"
+import "../components/ld2-edit/query.mjs"
 import { runQuery, valueToString } from "../libs/ld2-query.mjs"
-import {saveFileCSV} from "/libs/file.mjs"
-import {userPermissions} from "/system/user.mjs"
-import "/components/acl.mjs"
+import {saveFileCSV} from "../libs/file.mjs"
+import {userPermissions} from "../system/user.mjs"
+import "../components/acl.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `

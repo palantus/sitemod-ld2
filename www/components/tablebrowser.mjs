@@ -1,7 +1,7 @@
 let elementName = "tablebrowser-component"
 
 import { valueToString } from "../libs/ld2-query.mjs";
-import "/components/table-paging.mjs"
+import "../components/table-paging.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
