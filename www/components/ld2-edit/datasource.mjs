@@ -8,11 +8,11 @@ import "../../components/field-list.mjs"
 import "../../components/context-menu.mjs"
 import {alertDialog} from "../../components/dialog.mjs"
 import { toggleEditMode } from "../ld2-query.mjs"
+import { stylesheets, siteURL } from "../../system/core.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
-  <link rel='stylesheet' href='/css/ld2.css'>
+  <link rel='stylesheet' href='${siteURL()}/css/ld2.css'>
   <style>
     :host{display: block;}
     #container{
@@ -88,7 +88,8 @@ class Element extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open' })
+        .adoptedStyleSheets = [stylesheets.global];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.storeAndRefreshUI = this.storeAndRefreshUI.bind(this)

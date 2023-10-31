@@ -3,10 +3,10 @@ let elementName = "ld2-edit-query-on-component"
 import "../../components/field-edit-inline.mjs"
 import "../../components/field-list.mjs"
 import { toggleEditMode } from "../ld2-query.mjs"
+import { stylesheets } from "../../system/core.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
   <style>
     #container{
     }
@@ -25,7 +25,8 @@ class Element extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open' })
+        .adoptedStyleSheets = [stylesheets.global];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.shadowRoot.getElementById("this").addEventListener("value-changed", () => {

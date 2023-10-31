@@ -11,11 +11,10 @@ import { runQuery, valueToString } from "../libs/ld2-query.mjs"
 import {saveFileCSV} from "../libs/file.mjs"
 import {userPermissions} from "../system/user.mjs"
 import "../components/acl.mjs"
+import { stylesheets } from "../system/core.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
-  <link rel='stylesheet' href='/css/searchresults.css'>
   <style> 
     #description-header{margin-bottom: 10px;}
     table thead tr{
@@ -91,7 +90,8 @@ class Element extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open' })
+        .adoptedStyleSheets = [stylesheets.global, stylesheets.searchresults];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.refreshData = this.refreshData.bind(this)

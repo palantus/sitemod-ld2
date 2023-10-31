@@ -7,7 +7,7 @@ import "../components/tablebrowser.mjs"
 import "../components/ld2-queries.mjs"
 import "../components/field.mjs"
 import api from "../system/api.mjs"
-import {state, pushStateQuery, setPageTitle} from "../system/core.mjs"
+import {state, pushStateQuery, setPageTitle, stylesheets} from "../system/core.mjs"
 import {on, off} from "../system/events.mjs"
 import { alertDialog, showDialog } from "../components/dialog.mjs"
 import {saveFileCSV} from "../libs/file.mjs"
@@ -16,7 +16,6 @@ import { makeRowsSelectable } from "../libs/table-tools.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
   <style>
     #container{
         padding: 10px;
@@ -134,7 +133,8 @@ class Element extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open' })
+        .adoptedStyleSheets = [stylesheets.global];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.filesSelected = this.filesSelected.bind(this)

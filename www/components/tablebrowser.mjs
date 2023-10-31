@@ -2,10 +2,10 @@ let elementName = "tablebrowser-component"
 
 import { valueToString } from "../libs/ld2-query.mjs";
 import "../components/table-paging.mjs"
+import { stylesheets } from "../system/core.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
   <style>    
     #curtabrecords, #curtabrecords td, #curtabrecords th {
         border: 1px solid #ddd;
@@ -58,7 +58,8 @@ class Element extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open' })
+        .adoptedStyleSheets = [stylesheets.global];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.pagerPageChange = this.pagerPageChange.bind(this);

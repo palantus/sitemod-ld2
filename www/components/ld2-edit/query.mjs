@@ -6,10 +6,10 @@ import "../../components/field-edit-inline.mjs"
 import "../../components/context-menu.mjs"
 import "../../components/collapsible-card.mjs"
 import { toggleEditMode } from "../ld2-query.mjs"
+import { stylesheets } from "../../system/core.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
   <style>
     :host{display: block;}
     #summary-text{margin-bottom: 5px;}
@@ -52,7 +52,8 @@ class Element extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open' })
+        .adoptedStyleSheets = [stylesheets.global];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.shadowRoot.getElementById("add-ds").addEventListener("click", () => this.addDS({}));

@@ -5,10 +5,10 @@ import { promptDialog } from "../components/dialog.mjs"
 import {userPermissions} from "../system/user.mjs"
 import "../components/table-paging.mjs"
 import "../components/ld2-query.mjs"
+import { stylesheets } from "../system/core.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
   <style> 
     #initial-help-text{margin-bottom: 20px;}
     #existing-container{
@@ -93,7 +93,8 @@ class Element extends HTMLElement {
   constructor() {
     super();
 
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: 'open' })
+        .adoptedStyleSheets = [stylesheets.global];
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     this.refreshData = this.refreshData.bind(this)
