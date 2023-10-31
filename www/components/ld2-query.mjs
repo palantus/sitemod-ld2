@@ -14,8 +14,8 @@ import "../components/acl.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
-  <link rel='stylesheet' href='/css/searchresults.css'>
+  <link rel='stylesheet' href='../css/global.css'>
+  <link rel='stylesheet' href='../css/searchresults.css'>
   <style> 
     #description-header{margin-bottom: 10px;}
     table thead tr{

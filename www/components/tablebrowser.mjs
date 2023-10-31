@@ -5,7 +5,7 @@ import "../components/table-paging.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
+  <link rel='stylesheet' href='../css/global.css'>
   <style>    
     #curtabrecords, #curtabrecords td, #curtabrecords th {
         border: 1px solid #ddd;

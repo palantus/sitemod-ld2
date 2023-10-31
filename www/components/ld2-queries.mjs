@@ -8,7 +8,7 @@ import "../components/ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
+  <link rel='stylesheet' href='../css/global.css'>
   <style> 
     #initial-help-text{margin-bottom: 20px;}
     #existing-container{

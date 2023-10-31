@@ -9,7 +9,7 @@ import { toggleEditMode } from "../ld2-query.mjs"
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <link rel='stylesheet' href='/css/global.css'>
+  <link rel='stylesheet' href='../css/global.css'>
   <style>
     :host{display: block;}
     #summary-text{margin-bottom: 5px;}
