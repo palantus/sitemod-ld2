@@ -1,4 +1,4 @@
-import Entity, {query, nextNum} from "entitystorage"
+import Entity, { query, nextNum } from "entitystorage"
 import ACL from "../../../models/acl.mjs"
 import DataType from "../../../models/datatype.mjs"
 import Share from "../../../models/share.mjs"
@@ -17,32 +17,37 @@ export default class Query extends Entity {
   }
 
   static lookup(id) {
-    if(!id) return null;
+    if (!id) return null;
     return query.type(Query).id(id).tag(UNIQUE_TYPE_NAME).first
   }
 
-  static all(){
+  static all() {
     return query.type(Query).tag(UNIQUE_TYPE_NAME).all
   }
 
-  static allUser(user){
+  static allUser(user) {
     let type = DataType.lookup(UNIQUE_TYPE_NAME)
     return query.type(Query).tag(UNIQUE_TYPE_NAME).all.filter(l => new ACL(l, type).hasAccess(user, 'r'))
   }
 
-  patch(obj, user){
-    if(typeof obj.title === "string" && obj.title) this.title = obj.title;
-    if(typeof obj.description === "string") this.description = obj.description;
-    if(typeof obj.spec === "string") {
-      try{
+  static isOfType(entity) {
+    if (!entity) return false;
+    return entity.tags?.includes(UNIQUE_TYPE_NAME) || false;
+  }
+
+  patch(obj, user) {
+    if (typeof obj.title === "string" && obj.title) this.title = obj.title;
+    if (typeof obj.description === "string") this.description = obj.description;
+    if (typeof obj.spec === "string") {
+      try {
         JSON.parse(obj.spec)
-      } catch(err){
+      } catch (err) {
         throw "Invalid JSON"
       }
-      if(obj.spec.length > 50000) throw "Spec is too large. Can't support more than 50.000 characters";
+      if (obj.spec.length > 50000) throw "Spec is too large. Can't support more than 50.000 characters";
       this.spec = obj.spec;
     }
-    if(typeof obj.common === "boolean" && user.hasPermission("ld2.query.admin")) this.common = obj.common;
+    if (typeof obj.common === "boolean" && user.hasPermission("ld2.query.admin")) this.common = obj.common;
   }
 
   hasAccess(user, accessType = 'r', shareKey = null) {
@@ -57,13 +62,13 @@ export default class Query extends Entity {
     let acl = new ACL(this, DataType.lookup(UNIQUE_TYPE_NAME))
     return "" + (acl.hasAccess(user, "r", shareKey) ? 'r' : '') + (acl.hasAccess(user, "w", shareKey) ? 'w' : '')
   }
-  
-  delete(){
+
+  delete() {
     this.rels.share?.forEach(s => Share.from(s).delete())
     super.delete()
   }
 
-  get owner(){
+  get owner() {
     return User.from(this.related.owner)
   }
 
@@ -73,7 +78,7 @@ export default class Query extends Entity {
       id: this._id,
       title: this.title,
       this: this.spec,
-      owner: owner?.toObjSimple()||null,
+      owner: owner?.toObjSimple() || null,
       access: this.access(user, shareKey),
       common: this.common,
       category: this.common ? "common" : owner.id == user.id ? "mine" : "shared",
@@ -84,7 +89,7 @@ export default class Query extends Entity {
     return {
       ...this.toObj(user, shareKey),
       spec: this.spec,
-      description: this.description||null
+      description: this.description || null
     }
   }
 }
