@@ -258,7 +258,7 @@ class Element extends HTMLElement {
   }
 
   refreshTableList(){
-    this.shadowRoot.getElementById("header").innerHTML = `File format: <span>${this.reader.header.formatversion || "N/A"}</span>, AX version: <span>${this.reader.header.axversion || "N/A"}</span>, Exported at: <span>${this.reader.header.date ? moment(this.reader.header.date + " " + this.reader.header.time).format("D. MMM YYYY HH:mm:ss") : "N/A"}</span>`
+    this.shadowRoot.getElementById("header").innerHTML = `File format: <span>${this.reader.header.formatversion || "N/A"}</span>, AX version: <span>${this.reader.header.axversion || "N/A"}</span>, Exported at: <span>${this.reader.header.date ? moment(this.reader.header.date + " " + this.reader.header.time).format("D. MMM YYYY HH:mm:ss") : "N/A"}</span>, Product Version: ${this.reader.header.productVersion || "N/A"}`
   
     this.shadowRoot.querySelector("#fileoverviewtab tbody").innerHTML = this.reader.getTableNamesAsArray().map(tableName => `
       <tr>
